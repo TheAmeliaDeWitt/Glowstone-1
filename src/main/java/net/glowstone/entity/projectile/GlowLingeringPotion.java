@@ -11,44 +11,50 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class GlowLingeringPotion extends GlowSplashPotion implements LingeringPotion {
-    public GlowLingeringPotion(Location location) {
-        super(location);
-    }
+public class GlowLingeringPotion extends GlowSplashPotion implements LingeringPotion
+{
+	public GlowLingeringPotion( Location location )
+	{
+		super( location );
+	}
 
-    @Override
-    public void collide(Block block) {
-        super.collide(block);
-        createEffectCloud();
-    }
+	@Override
+	public void collide( Block block )
+	{
+		super.collide( block );
+		createEffectCloud();
+	}
 
-    @Override
-    public void collide(LivingEntity entity) {
-        super.collide(entity);
-        createEffectCloud();
-    }
+	@Override
+	public void collide( LivingEntity entity )
+	{
+		super.collide( entity );
+		createEffectCloud();
+	}
 
-    private void createEffectCloud() {
-        AreaEffectCloud cloud = (AreaEffectCloud)
-                location.getWorld().spawnEntity(location, EntityType.AREA_EFFECT_CLOUD);
-        cloud.setRadius(3);
-        cloud.setRadiusPerTick(-.005f);
-        ItemMeta meta = getItem().getItemMeta();
-        if (meta instanceof PotionMeta) {
-            PotionMeta potionMeta = (PotionMeta) meta;
-            cloud.setColor(potionMeta.getColor());
-            cloud.setBasePotionData(potionMeta.getBasePotionData());
-            for (PotionEffect effect : getEffects()) {
-                // Cloud effects have only 1/4 the usual duration
-                PotionEffectType type = effect.getType();
-                if (!type.isInstant()) {
-                    effect = new PotionEffect(effect.getType(), effect.getDuration() / 4,
-                            effect.getAmplifier());
-                }
-                // TODO: else effect is 1/2 the usual
-                cloud.addCustomEffect(effect, true);
-            }
-        }
-        remove();
-    }
+	private void createEffectCloud()
+	{
+		AreaEffectCloud cloud = ( AreaEffectCloud ) location.getWorld().spawnEntity( location, EntityType.AREA_EFFECT_CLOUD );
+		cloud.setRadius( 3 );
+		cloud.setRadiusPerTick( -.005f );
+		ItemMeta meta = getItem().getItemMeta();
+		if ( meta instanceof PotionMeta )
+		{
+			PotionMeta potionMeta = ( PotionMeta ) meta;
+			cloud.setColor( potionMeta.getColor() );
+			cloud.setBasePotionData( potionMeta.getBasePotionData() );
+			for ( PotionEffect effect : getEffects() )
+			{
+				// Cloud effects have only 1/4 the usual duration
+				PotionEffectType type = effect.getType();
+				if ( !type.isInstant() )
+				{
+					effect = new PotionEffect( effect.getType(), effect.getDuration() / 4, effect.getAmplifier() );
+				}
+				// TODO: else effect is 1/2 the usual
+				cloud.addCustomEffect( effect, true );
+			}
+		}
+		remove();
+	}
 }

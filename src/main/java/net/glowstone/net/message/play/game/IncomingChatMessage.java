@@ -1,16 +1,24 @@
 package net.glowstone.net.message.play.game;
 
 import com.flowpowered.network.AsyncableMessage;
-import lombok.Data;
 
-@Data
-public final class IncomingChatMessage implements AsyncableMessage {
+public final class IncomingChatMessage implements AsyncableMessage
+{
+	private final String text;
 
-    private final String text;
+	public IncomingChatMessage( String text )
+	{
+		this.text = text;
+	}
 
-    @Override
-    public boolean isAsync() {
-        return true;
-    }
+	public String getText()
+	{
+		return text;
+	}
 
+	@Override
+	public boolean isAsync()
+	{
+		return true;
+	}
 }

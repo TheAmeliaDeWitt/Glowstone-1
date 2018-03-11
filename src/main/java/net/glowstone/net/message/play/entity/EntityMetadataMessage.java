@@ -1,14 +1,29 @@
 package net.glowstone.net.message.play.entity;
 
 import com.flowpowered.network.Message;
-import java.util.List;
-import lombok.Data;
+
 import net.glowstone.entity.meta.MetadataMap.Entry;
 
-@Data
-public final class EntityMetadataMessage implements Message {
+import java.util.List;
 
-    private final int id;
-    private final List<Entry> entries;
+public final class EntityMetadataMessage implements Message
+{
+	private final List<Entry> entries;
+	private final int id;
 
+	public EntityMetadataMessage( int id, List<Entry> entries )
+	{
+		this.id = id;
+		this.entries = entries;
+	}
+
+	public List<Entry> getEntries()
+	{
+		return entries;
+	}
+
+	public int getId()
+	{
+		return id;
+	}
 }

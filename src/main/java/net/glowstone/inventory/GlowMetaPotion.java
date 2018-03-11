@@ -1,17 +1,10 @@
 package net.glowstone.inventory;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import lombok.Getter;
-import lombok.Setter;
+
 import net.glowstone.util.nbt.CompoundTag;
 import net.glowstone.util.nbt.TagType;
+
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -21,296 +14,382 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
-public class GlowMetaPotion extends GlowMetaItem implements PotionMeta {
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-    @Getter
-    @Setter
-    PotionData basePotionData;
-    List<PotionEffect> effects = new ArrayList<>();
-    @Getter
-    @Setter
-    Color color = null;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-    /**
-     * Creates an instance by copying from the given {@link ItemMeta}. If that item is another
-     * {@link PotionMeta}, its color, {@link PotionData} and {@link PotionEffect}s are copied;
-     * otherwise, the new potion has no effects.
-     * @param meta the {@link ItemMeta} to copy
-     */
-    public GlowMetaPotion(ItemMeta meta) {
-        super(meta);
-        if (!(meta instanceof PotionMeta)) {
-            return;
-        }
-        this.copyFrom((PotionMeta) meta);
-    }
+public class GlowMetaPotion extends GlowMetaItem implements PotionMeta
+{
+	/**
+	 * Converts a PotionData to a Potion ID string.
+	 *
+	 * @param basePotionData the PotionData to convert
+	 *
+	 * @return the Potion ID string
+	 */
+	public static String dataToString( PotionData basePotionData )
+	{
+		String name = "minecraft:";
+		if ( basePotionData.isExtended() )
+		{
+			name += "long_";
+		}
+		else if ( basePotionData.isUpgraded() )
+		{
+			name += "strong_";
+		}
+		return name + PotionTypeTable.toName( basePotionData.getType() );
+	}
 
-    /**
-     * Reads a {@link PotionEffect} from an NBT compound tag.
-     *
-     * @param tag a potion effect NBT compound tag
-     * @return {@code tag} as a {@link PotionEffect}
-     */
-    public static PotionEffect fromNbt(CompoundTag tag) {
-        PotionEffectType type = PotionEffectType.getById(tag.getByte("Id"));
-        int duration = tag.getInt("Duration");
-        int amplifier = tag.getByte("Amplifier");
-        boolean ambient = tag.isByte("Ambient") && tag.getBool("Ambient");
-        boolean particles = !tag.isByte("ShowParticles") || tag.getBool("ShowParticles");
+	/**
+	 * Reads a {@link PotionEffect} from an NBT compound tag.
+	 *
+	 * @param tag a potion effect NBT compound tag
+	 *
+	 * @return {@code tag} as a {@link PotionEffect}
+	 */
+	public static PotionEffect fromNbt( CompoundTag tag )
+	{
+		PotionEffectType type = PotionEffectType.getById( tag.getByte( "Id" ) );
+		int duration = tag.getInt( "Duration" );
+		int amplifier = tag.getByte( "Amplifier" );
+		boolean ambient = tag.isByte( "Ambient" ) && tag.getBool( "Ambient" );
+		boolean particles = !tag.isByte( "ShowParticles" ) || tag.getBool( "ShowParticles" );
 
-        return new PotionEffect(type, duration, amplifier, ambient, particles);
-    }
+		return new PotionEffect( type, duration, amplifier, ambient, particles );
+	}
 
-    /**
-     * Converts a {@link PotionEffect} to an NBT compound tag.
-     *
-     * @param effect the potion effect
-     * @return {@code effect} as an NBT compound tag
-     */
-    public static CompoundTag toNbt(PotionEffect effect) {
-        CompoundTag tag = new CompoundTag();
+	/**
+	 * Converts a {@link PotionEffect} to an NBT compound tag.
+	 *
+	 * @param effect the potion effect
+	 *
+	 * @return {@code effect} as an NBT compound tag
+	 */
+	public static CompoundTag toNbt( PotionEffect effect )
+	{
+		CompoundTag tag = new CompoundTag();
 
-        tag.putByte("Id", effect.getType().getId());
-        tag.putInt("Duration", effect.getDuration());
-        tag.putByte("Amplifier", effect.getAmplifier());
-        tag.putBool("Ambient", effect.isAmbient());
-        tag.putBool("ShowParticles", effect.hasParticles());
+		tag.putByte( "Id", effect.getType().getId() );
+		tag.putInt( "Duration", effect.getDuration() );
+		tag.putByte( "Amplifier", effect.getAmplifier() );
+		tag.putBool( "Ambient", effect.isAmbient() );
+		tag.putBool( "ShowParticles", effect.hasParticles() );
 
-        return tag;
-    }
+		return tag;
+	}
 
-    @Override
-    public boolean isApplicable(Material material) {
-        return material == Material.POTION || material == Material.SPLASH_POTION
-            || material == Material.TIPPED_ARROW || material == Material.LINGERING_POTION;
-    }
+	PotionData basePotionData;
+	Color color = null;
+	List<PotionEffect> effects = new ArrayList<>();
 
-    @Override
-    public GlowMetaPotion clone() {
-        return new GlowMetaPotion(this);
-    }
+	/**
+	 * Creates an instance by copying from the given {@link ItemMeta}. If that item is another
+	 * {@link PotionMeta}, its color, {@link PotionData} and {@link PotionEffect}s are copied;
+	 * otherwise, the new potion has no effects.
+	 *
+	 * @param meta the {@link ItemMeta} to copy
+	 */
+	public GlowMetaPotion( ItemMeta meta )
+	{
+		super( meta );
+		if ( !( meta instanceof PotionMeta ) )
+		{
+			return;
+		}
+		this.copyFrom( ( PotionMeta ) meta );
+	}
 
-    @Override
-    public Map<String, Object> serialize() {
-        Map<String, Object> result = super.serialize();
-        result.put("meta-type", "POTION");
+	@Override
+	public boolean addCustomEffect( PotionEffect effect, boolean overwrite )
+	{
+		checkNotNull( effect, "PotionEffect cannot be null." );
 
-        if (hasCustomEffects()) {
-            result.put("custom-effects", getCustomEffects());
-        }
+		for ( PotionEffect eff : effects )
+		{
+			if ( eff.getType() == effect.getType() && !overwrite )
+			{
+				return false;
+			}
+		}
 
-        return result;
-    }
+		effects.add( effect );
+		return true;
+	}
 
-    @Override
-    void writeNbt(CompoundTag tag) {
-        super.writeNbt(tag);
+	@Override
+	public boolean clearCustomEffects()
+	{
+		if ( effects.isEmpty() )
+		{
+			return false;
+		}
+		effects.clear();
+		return true;
+	}
 
-        if (hasCustomEffects()) {
-            List<CompoundTag> customEffects = effects.stream().map(GlowMetaPotion::toNbt)
-                .collect(Collectors.toList());
-            tag.putCompoundList("CustomEffects", customEffects);
-        }
-        tag.putString("Potion", dataToString(basePotionData));
-        if (this.color != null) {
-            tag.putInt("CustomPotionColor", this.color.asRGB());
-        }
-    }
+	@Override
+	public void clearCustomEffects0()
+	{
+		clearCustomEffects();
+	}
 
-    @Override
-    void readNbt(CompoundTag tag) {
-        super.readNbt(tag);
+	@Override
+	public GlowMetaPotion clone()
+	{
+		return new GlowMetaPotion( this );
+	}
 
-        if (tag.isList("CustomEffects", TagType.COMPOUND)) {
-            List<CompoundTag> customEffects = tag.getCompoundList("CustomEffects");
-            for (CompoundTag effect : customEffects) {
-                addCustomEffect(fromNbt(effect), true);
-            }
-        }
-        if (tag.isString("Potion")) {
-            this.basePotionData = dataFromString(tag.getString("Potion"));
-        }
-        if (tag.isInt("CustomPotionColor")) {
-            this.color = Color.fromRGB(tag.getInt("CustomPotionColor"));
-        }
-    }
+	/**
+	 * Converts a Potion ID string to the PotionData of this item meta.
+	 *
+	 * @param string the Potion ID string
+	 *
+	 * @return the resultant PotionData
+	 */
+	private PotionData dataFromString( String string )
+	{
+		PotionType type;
+		boolean extended = false;
+		boolean upgraded = false;
+		if ( string.startsWith( "minecraft:" ) )
+		{
+			string = string.replace( "minecraft:", "" );
+		}
+		if ( string.startsWith( "long_" ) )
+		{
+			string = string.replace( "long_", "" );
+			extended = true;
+		}
+		else if ( string.startsWith( "strong_" ) )
+		{
+			string = string.replace( "strong_", "" );
+			upgraded = true;
+		}
+		type = PotionTypeTable.fromName( string );
+		return new PotionData( type, extended, upgraded );
+	}
 
-    @Override
-    public boolean hasCustomEffects() {
-        return !effects.isEmpty();
-    }
+	@Override
+	public PotionData getBasePotionData()
+	{
+		return basePotionData;
+	}
 
-    @Override
-    public List<PotionEffect> getCustomEffects() {
-        return ImmutableList.copyOf(effects);
-    }
+	@Override
+	public void setBasePotionData( PotionData basePotionData )
+	{
+		this.basePotionData = basePotionData;
+	}
 
-    @Override
-    public boolean addCustomEffect(PotionEffect effect, boolean overwrite) {
-        checkNotNull(effect, "PotionEffect cannot be null.");
+	@Override
+	public Color getColor()
+	{
+		return color;
+	}
 
-        for (PotionEffect eff : effects) {
-            if (eff.getType() == effect.getType() && !overwrite) {
-                return false;
-            }
-        }
+	@Override
+	public void setColor( Color color )
+	{
+		this.color = color;
+	}
 
-        effects.add(effect);
-        return true;
-    }
+	@Override
+	public List<PotionEffect> getCustomEffects()
+	{
+		return ImmutableList.copyOf( effects );
+	}
 
-    @Override
-    public boolean removeCustomEffect(PotionEffectType type) {
-        Iterator<PotionEffect> it = effects.iterator();
+	@Override
+	public boolean hasColor()
+	{
+		return color != null;
+	}
 
-        while (it.hasNext()) {
-            PotionEffect effect = it.next();
-            if (effect.getType() == type) {
-                it.remove();
-                return true;
-            }
-        }
-        return false;
-    }
+	@Override
+	public boolean hasCustomEffect( PotionEffectType type )
+	{
+		for ( PotionEffect effect : effects )
+		{
+			if ( effect.getType() == type )
+			{
+				return true;
+			}
+		}
 
-    @Override
-    public boolean hasCustomEffect(PotionEffectType type) {
-        for (PotionEffect effect : effects) {
-            if (effect.getType() == type) {
-                return true;
-            }
-        }
+		return false;
+	}
 
-        return false;
-    }
+	@Override
+	public boolean hasCustomEffects()
+	{
+		return !effects.isEmpty();
+	}
 
-    @Override
-    public void clearCustomEffects0() {
-        clearCustomEffects();
-    }
+	@Override
+	public boolean isApplicable( Material material )
+	{
+		return material == Material.POTION || material == Material.SPLASH_POTION || material == Material.TIPPED_ARROW || material == Material.LINGERING_POTION;
+	}
 
-    @Override
-    public boolean setMainEffect(PotionEffectType type) {
-        PotionEffect main = null;
-        for (PotionEffect effect : effects) {
-            if (effect.getType() == type) {
-                if (effects.indexOf(effect) == 0) {
-                    return false;
-                }
-                main = effect;
-                effects.remove(effect);
-                break;
-            }
-        }
-        if (main == null) {
-            return false;
-        }
+	@Override
+	void readNbt( CompoundTag tag )
+	{
+		super.readNbt( tag );
 
-        effects.add(0, main);
-        return true;
-    }
+		if ( tag.isList( "CustomEffects", TagType.COMPOUND ) )
+		{
+			List<CompoundTag> customEffects = tag.getCompoundList( "CustomEffects" );
+			for ( CompoundTag effect : customEffects )
+			{
+				addCustomEffect( fromNbt( effect ), true );
+			}
+		}
+		if ( tag.isString( "Potion" ) )
+		{
+			this.basePotionData = dataFromString( tag.getString( "Potion" ) );
+		}
+		if ( tag.isInt( "CustomPotionColor" ) )
+		{
+			this.color = Color.fromRGB( tag.getInt( "CustomPotionColor" ) );
+		}
+	}
 
-    @Override
-    public boolean clearCustomEffects() {
-        if (effects.isEmpty()) {
-            return false;
-        }
-        effects.clear();
-        return true;
-    }
+	@Override
+	public boolean removeCustomEffect( PotionEffectType type )
+	{
+		Iterator<PotionEffect> it = effects.iterator();
 
-    @Override
-    public boolean hasColor() {
-        return color != null;
-    }
+		while ( it.hasNext() )
+		{
+			PotionEffect effect = it.next();
+			if ( effect.getType() == type )
+			{
+				it.remove();
+				return true;
+			}
+		}
+		return false;
+	}
 
-    /**
-     * Converts a PotionData to a Potion ID string.
-     *
-     * @param basePotionData the PotionData to convert
-     * @return the Potion ID string
-     */
-    public static String dataToString(PotionData basePotionData) {
-        String name = "minecraft:";
-        if (basePotionData.isExtended()) {
-            name += "long_";
-        } else if (basePotionData.isUpgraded()) {
-            name += "strong_";
-        }
-        return name + PotionTypeTable.toName(basePotionData.getType());
-    }
+	@Override
+	public Map<String, Object> serialize()
+	{
+		Map<String, Object> result = super.serialize();
+		result.put( "meta-type", "POTION" );
 
-    /**
-     * Converts a Potion ID string to the PotionData of this item meta.
-     *
-     * @param string the Potion ID string
-     * @return the resultant PotionData
-     */
-    private PotionData dataFromString(String string) {
-        PotionType type;
-        boolean extended = false;
-        boolean upgraded = false;
-        if (string.startsWith("minecraft:")) {
-            string = string.replace("minecraft:", "");
-        }
-        if (string.startsWith("long_")) {
-            string = string.replace("long_", "");
-            extended = true;
-        } else if (string.startsWith("strong_")) {
-            string = string.replace("strong_", "");
-            upgraded = true;
-        }
-        type = PotionTypeTable.fromName(string);
-        return new PotionData(type, extended, upgraded);
-    }
+		if ( hasCustomEffects() )
+		{
+			result.put( "custom-effects", getCustomEffects() );
+		}
 
-    /**
-     * Conversion for Bukkit Potion names to Vanilla Potion names.
-     */
-    enum PotionTypeTable {
-        EMPTY(PotionType.UNCRAFTABLE, "empty"),
-        LEAPING(PotionType.JUMP, "leaping"),
-        SWIFTNESS(PotionType.SPEED, "swiftness"),
-        HEALING(PotionType.INSTANT_HEAL, "healing"),
-        HARMING(PotionType.INSTANT_DAMAGE, "harming"),
-        REGENERATION(PotionType.REGEN, "regeneration");
+		return result;
+	}
 
-        PotionType type;
-        String name;
+	@Override
+	public boolean setMainEffect( PotionEffectType type )
+	{
+		PotionEffect main = null;
+		for ( PotionEffect effect : effects )
+		{
+			if ( effect.getType() == type )
+			{
+				if ( effects.indexOf( effect ) == 0 )
+				{
+					return false;
+				}
+				main = effect;
+				effects.remove( effect );
+				break;
+			}
+		}
+		if ( main == null )
+		{
+			return false;
+		}
 
-        PotionTypeTable(PotionType type, String name) {
-            this.type = type;
-            this.name = name;
-        }
+		effects.add( 0, main );
+		return true;
+	}
 
-        /**
-         * Converts a Vanilla Potion ID to an equivalent Bukkit PotionType.
-         *
-         * @param name the Vanilla Potion ID
-         * @return the PotionType equivalent
-         */
-        static PotionType fromName(String name) {
-            for (PotionTypeTable table : values()) {
-                if (name.equalsIgnoreCase(table.name)) {
-                    return table.type;
-                }
-            }
-            return PotionType.valueOf(name.toUpperCase());
-        }
+	@Override
+	void writeNbt( CompoundTag tag )
+	{
+		super.writeNbt( tag );
 
-        /**
-         * Converts a Bukkit PotionType to an equivalent Vanilla Potion ID.
-         *
-         * @param type the Bukkit PotionType
-         * @return the Vanilla Potion ID equivalent
-         */
-        static String toName(PotionType type) {
-            for (PotionTypeTable table : values()) {
-                if (type == table.type) {
-                    return table.name;
-                }
-            }
-            return type.name().toLowerCase();
-        }
-    }
+		if ( hasCustomEffects() )
+		{
+			List<CompoundTag> customEffects = effects.stream().map( GlowMetaPotion::toNbt ).collect( Collectors.toList() );
+			tag.putCompoundList( "CustomEffects", customEffects );
+		}
+		tag.putString( "Potion", dataToString( basePotionData ) );
+		if ( this.color != null )
+		{
+			tag.putInt( "CustomPotionColor", this.color.asRGB() );
+		}
+	}
+
+	/**
+	 * Conversion for Bukkit Potion names to Vanilla Potion names.
+	 */
+	enum PotionTypeTable
+	{
+		EMPTY( PotionType.UNCRAFTABLE, "empty" ),
+		LEAPING( PotionType.JUMP, "leaping" ),
+		SWIFTNESS( PotionType.SPEED, "swiftness" ),
+		HEALING( PotionType.INSTANT_HEAL, "healing" ),
+		HARMING( PotionType.INSTANT_DAMAGE, "harming" ),
+		REGENERATION( PotionType.REGEN, "regeneration" );
+
+		/**
+		 * Converts a Vanilla Potion ID to an equivalent Bukkit PotionType.
+		 *
+		 * @param name the Vanilla Potion ID
+		 *
+		 * @return the PotionType equivalent
+		 */
+		static PotionType fromName( String name )
+		{
+			for ( PotionTypeTable table : values() )
+			{
+				if ( name.equalsIgnoreCase( table.name ) )
+				{
+					return table.type;
+				}
+			}
+			return PotionType.valueOf( name.toUpperCase() );
+		}
+
+		/**
+		 * Converts a Bukkit PotionType to an equivalent Vanilla Potion ID.
+		 *
+		 * @param type the Bukkit PotionType
+		 *
+		 * @return the Vanilla Potion ID equivalent
+		 */
+		static String toName( PotionType type )
+		{
+			for ( PotionTypeTable table : values() )
+			{
+				if ( type == table.type )
+				{
+					return table.name;
+				}
+			}
+			return type.name().toLowerCase();
+		}
+
+		String name;
+		PotionType type;
+
+		PotionTypeTable( PotionType type, String name )
+		{
+			this.type = type;
+			this.name = name;
+		}
+	}
 }

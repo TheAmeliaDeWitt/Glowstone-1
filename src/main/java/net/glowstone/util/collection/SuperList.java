@@ -9,219 +9,260 @@ import java.util.ListIterator;
 /**
  * List which delegates to other lists.
  */
-public class SuperList<E> extends SuperCollection<E> implements List<E> {
+public class SuperList<E> extends SuperCollection<E> implements List<E>
+{
+	public SuperList()
+	{
+		super( AdditionMode.LAST );
+	}
 
-    public SuperList() {
-        super(AdditionMode.LAST);
-    }
+	public SuperList( List<List<E>> parents )
+	{
+		super( parents, AdditionMode.LAST );
+	}
 
-    public SuperList(List<List<E>> parents) {
-        super(parents, AdditionMode.LAST);
-    }
+	@Override
+	public void add( int index, E object )
+	{
+		int relativePos = index;
 
-    @Override
-    public List<List<E>> getParents() {
-        return (List<List<E>>) super.getParents();
-    }
+		for ( List<E> parent : getParents() )
+		{
+			int parentSize = parent.size();
 
-    @Override
-    public List<E> asClone() {
-        List<E> output = new ArrayList<>();
+			if ( parentSize <= relativePos )
+			{
+				parent.add( relativePos, object );
+				return;
+			}
 
-        getParents().forEach(output::addAll);
+			relativePos -= parentSize;
+		}
 
-        return output;
-    }
+		throw new IndexOutOfBoundsException( "This list does not contain position " + index );
+	}
 
-    @Override
-    protected Class<? extends Collection> getCollectionClass() {
-        return List.class;
-    }
+	@Override
+	public boolean addAll( int index, Collection<? extends E> objects )
+	{
+		int relativePos = index;
+		int modified = 0;
 
-    @Override
-    public void add(int index, E object) {
-        int relativePos = index;
+		for ( List<E> parent : getParents() )
+		{
+			int parentSize = parent.size();
 
-        for (List<E> parent : getParents()) {
-            int parentSize = parent.size();
+			if ( parentSize <= relativePos )
+			{
+				return parent.addAll( relativePos, objects );
+			}
 
-            if (parentSize <= relativePos) {
-                parent.add(relativePos, object);
-                return;
-            }
+			relativePos -= parentSize;
+		}
 
-            relativePos -= parentSize;
-        }
+		throw new IndexOutOfBoundsException( "This list does not contain position " + index );
+	}
 
-        throw new IndexOutOfBoundsException("This list does not contain position " + index);
-    }
+	@Override
+	public List<E> asClone()
+	{
+		List<E> output = new ArrayList<>();
 
-    @Override
-    public boolean addAll(int index, Collection<? extends E> objects) {
-        int relativePos = index;
-        int modified = 0;
+		getParents().forEach( output::addAll );
 
-        for (List<E> parent : getParents()) {
-            int parentSize = parent.size();
+		return output;
+	}
 
-            if (parentSize <= relativePos) {
-                return parent.addAll(relativePos, objects);
-            }
+	@Override
+	public boolean equals( Object object )
+	{
+		if ( object == null )
+		{
+			return false;
+		}
 
-            relativePos -= parentSize;
-        }
+		if ( object == this )
+		{
+			return true;
+		}
 
-        throw new IndexOutOfBoundsException("This list does not contain position " + index);
-    }
+		if ( !( object instanceof List ) )
+		{
+			return false;
+		}
 
-    @Override
-    public boolean equals(Object object) {
-        if (object == null) {
-            return false;
-        }
+		List other = ( List ) object;
 
-        if (object == this) {
-            return true;
-        }
+		if ( other.size() != size() )
+		{
+			return false;
+		}
 
-        if (!(object instanceof List)) {
-            return false;
-        }
+		Iterator thisIterator = iterator();
+		Iterator otherIterator = other.iterator();
+		while ( thisIterator.hasNext() )
+		{
+			if ( !thisIterator.next().equals( otherIterator.next() ) )
+			{
+				return false;
+			}
+		}
 
-        List other = (List) object;
+		return true;
+	}
 
-        if (other.size() != size()) {
-            return false;
-        }
+	@Override
+	public E get( int index )
+	{
+		int relativePos = index;
 
-        Iterator thisIterator = iterator();
-        Iterator otherIterator = other.iterator();
-        while (thisIterator.hasNext()) {
-            if (!thisIterator.next().equals(otherIterator.next())) {
-                return false;
-            }
-        }
+		for ( List<E> parent : getParents() )
+		{
+			int parentSize = parent.size();
 
-        return true;
-    }
+			if ( relativePos < parentSize )
+			{
+				return parent.get( relativePos );
+			}
 
-    @Override
-    public E get(int index) {
-        int relativePos = index;
+			relativePos -= parentSize;
+		}
 
-        for (List<E> parent : getParents()) {
-            int parentSize = parent.size();
+		throw new IndexOutOfBoundsException( "This list does not contain position " + index );
+	}
 
-            if (relativePos < parentSize) {
-                return parent.get(relativePos);
-            }
+	@Override
+	protected Class<? extends Collection> getCollectionClass()
+	{
+		return List.class;
+	}
 
-            relativePos -= parentSize;
-        }
+	@Override
+	public List<List<E>> getParents()
+	{
+		return ( List<List<E>> ) super.getParents();
+	}
 
-        throw new IndexOutOfBoundsException("This list does not contain position " + index);
-    }
+	@Override
+	public int indexOf( Object object )
+	{
+		int relativePos = 0;
 
-    @Override
-    public Iterator<E> iterator() {
-        return new SuperIterator(getParents());
-    }
+		for ( List<E> parent : getParents() )
+		{
+			int parentIndex = parent.indexOf( object );
 
-    @Override
-    public E remove(int index) {
-        int relativePos = index;
+			if ( parentIndex >= 0 )
+			{
+				return relativePos + parentIndex;
+			}
 
-        for (List<E> parent : getParents()) {
-            int parentSize = parent.size();
+			relativePos += parent.size();
+		}
 
-            if (relativePos < parentSize) {
-                return parent.remove(relativePos);
-            }
+		return -1;
+	}
 
-            relativePos -= parentSize;
-        }
+	@Override
+	public Iterator<E> iterator()
+	{
+		return new SuperIterator( getParents() );
+	}
 
-        throw new IndexOutOfBoundsException("This list does not contain position " + index);
-    }
+	@Override
+	public int lastIndexOf( Object object )
+	{
+		List<List<E>> parents = getParents();
+		ListIterator<List<E>> iterator = parents.listIterator( parents.size() );
+		int index = -1;
 
-    @Override
-    public int indexOf(Object object) {
-        int relativePos = 0;
+		while ( iterator.hasPrevious() )
+		{
+			List<E> parent = iterator.previous();
 
-        for (List<E> parent : getParents()) {
-            int parentIndex = parent.indexOf(object);
+			if ( index < 0 )
+			{
+				index = parent.lastIndexOf( object );
+			}
+			else
+			{
+				index += parent.size();
+			}
+		}
 
-            if (parentIndex >= 0) {
-                return relativePos + parentIndex;
-            }
+		return index;
+	}
 
-            relativePos += parent.size();
-        }
+	@Override
+	public ListIterator<E> listIterator()
+	{
+		return new SuperListIterator( getParents() );
+	}
 
-        return -1;
-    }
+	@Override
+	public ListIterator<E> listIterator( int index )
+	{
+		return new SuperListIterator( getParents(), index );
+	}
 
-    @Override
-    public int lastIndexOf(Object object) {
-        List<List<E>> parents = getParents();
-        ListIterator<List<E>> iterator = parents.listIterator(parents.size());
-        int index = -1;
+	@Override
+	public E remove( int index )
+	{
+		int relativePos = index;
 
-        while (iterator.hasPrevious()) {
-            List<E> parent = iterator.previous();
+		for ( List<E> parent : getParents() )
+		{
+			int parentSize = parent.size();
 
-            if (index < 0) {
-                index = parent.lastIndexOf(object);
-            } else {
-                index += parent.size();
-            }
-        }
+			if ( relativePos < parentSize )
+			{
+				return parent.remove( relativePos );
+			}
 
-        return index;
-    }
+			relativePos -= parentSize;
+		}
 
-    @Override
-    public ListIterator<E> listIterator() {
-        return new SuperListIterator(getParents());
-    }
+		throw new IndexOutOfBoundsException( "This list does not contain position " + index );
+	}
 
-    @Override
-    public ListIterator<E> listIterator(int index) {
-        return new SuperListIterator(getParents(), index);
-    }
+	@Override
+	public E set( int index, E object )
+	{
+		int relativePos = index;
 
-    @Override
-    public E set(int index, E object) {
-        int relativePos = index;
+		for ( List<E> parent : getParents() )
+		{
+			int parentSize = parent.size();
 
-        for (List<E> parent : getParents()) {
-            int parentSize = parent.size();
+			if ( relativePos < parentSize )
+			{
+				return parent.set( relativePos, object );
+			}
 
-            if (relativePos < parentSize) {
-                return parent.set(relativePos, object);
-            }
+			relativePos -= parentSize;
+		}
 
-            relativePos -= parentSize;
-        }
+		throw new IndexOutOfBoundsException( "This list does not contain position " + index );
+	}
 
-        throw new IndexOutOfBoundsException("This list does not contain position " + index);
-    }
+	@Override
+	public int size()
+	{
+		int size = 0;
 
-    @Override
-    public int size() {
-        int size = 0;
+		for ( List<E> parent : getParents() )
+		{
+			size += parent.size();
+		}
 
-        for (List<E> parent : getParents()) {
-            size += parent.size();
-        }
+		return size;
+	}
 
-        return size;
-    }
-
-    @Override
-    public List<E> subList(int fromIndex, int toIndex) {
-        // Kinda slow. If this is ever going to be used heavily, you'll probably want to implement a
-        // "SubList" class, since neither Java nor Guava provides a public implementation.
-        return asClone().subList(fromIndex, toIndex);
-    }
+	@Override
+	public List<E> subList( int fromIndex, int toIndex )
+	{
+		// Kinda slow. If this is ever going to be used heavily, you'll probably want to implement a
+		// "SubList" class, since neither Java nor Guava provides a public implementation.
+		return asClone().subList( fromIndex, toIndex );
+	}
 }

@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Generic super collection. This is an abstract collection which delegates (ie redirects
@@ -28,276 +26,335 @@ import lombok.Setter;
  * #setResultMode(ResultMode)} method. It defaults to ANY, so operations that return booleans will
  * return true as long as at least one children succeeded.
  */
-public abstract class SuperCollection<E> implements Collection<E> {
+public abstract class SuperCollection<E> implements Collection<E>
+{
+	private final List<? extends Collection<E>> parents;
+	/**
+	 * Determines how this collection will behave to additions.
+	 *
+	 * <p>If mode is set to ALL, the addition will be performed on every parent. Default for sets.
+	 *
+	 * <p>If mode is set to LAST, the operation will be performed on the last parent only. Default
+	 * for lists.
+	 *
+	 * @param additionMode Addition mode.
+	 * @return Addition mode.
+	 */
+	private AdditionMode additionMode;
+	/**
+	 * Current result mode.
+	 *
+	 * <p>If mode is set to ANY, operations will return "true" as long as the parents returned
+	 * "true" at least once.
+	 *
+	 * <p>If mode is set to ALL, operations will only return "true" if all parents also returned
+	 * "true".
+	 *
+	 * @param resultMode Result mode.
+	 * @return Result mode.
+	 */
+	private ResultMode resultMode = ResultMode.ANY;
 
-    private final List<? extends Collection<E>> parents;
-    /**
-     * Current result mode.
-     *
-     * <p>If mode is set to ANY, operations will return "true" as long as the parents returned
-     * "true" at least once.
-     *
-     * <p>If mode is set to ALL, operations will only return "true" if all parents also returned
-     * "true".
-     *
-     * @param resultMode Result mode.
-     * @return Result mode.
-     */
-    @Getter
-    @Setter
-    private ResultMode resultMode = ResultMode.ANY;
-    /**
-     * Determines how this collection will behave to additions.
-     *
-     * <p>If mode is set to ALL, the addition will be performed on every parent. Default for sets.
-     *
-     * <p>If mode is set to LAST, the operation will be performed on the last parent only. Default
-     * for lists.
-     *
-     * @param additionMode Addition mode.
-     * @return Addition mode.
-     */
-    @Getter
-    @Setter
-    private AdditionMode additionMode;
+	public SuperCollection( AdditionMode additionMode )
+	{
+		this( new ArrayList<>(), additionMode );
+	}
 
-    public SuperCollection(AdditionMode additionMode) {
-        this(new ArrayList<>(), additionMode);
-    }
+	public SuperCollection( List<? extends Collection<E>> parents, AdditionMode additionMode )
+	{
+		this.parents = parents;
+		this.additionMode = additionMode;
+	}
 
-    public SuperCollection(List<? extends Collection<E>> parents, AdditionMode additionMode) {
-        this.parents = parents;
-        this.additionMode = additionMode;
-    }
+	@Override
+	public boolean add( E object )
+	{
+		switch ( additionMode )
+		{
 
-    /**
-     * Returns the list of parents.
-     *
-     * @return Parent list.
-     */
-    public List<? extends Collection<E>> getParents() {
-        // TODO: Replace with facade
-        return parents;
-    }
+			case ALL:
+				int modified = 0;
+				for ( Collection<E> parent : parents )
+				{
+					if ( parent.add( object ) )
+					{
+						modified++;
+					}
+				}
 
-    /**
-     * Returns a new collection with the same contents as the parents.
-     *
-     * @return New mutable collection.
-     */
-    public abstract Collection<E> asClone();
+				return resultBoolean( modified );
 
-    /**
-     * Returns the class this SuperCollection implements.
-     *
-     * @return Collection class.
-     */
-    protected abstract Class<? extends Collection> getCollectionClass();
+			case LAST:
+				return parents.get( parents.size() - 1 ).add( object );
+			default:
+				throw new IllegalStateException( "This SuperCollection has an invalid addition mode!" );
+		}
+	}
 
-    protected boolean resultBoolean(int modified) {
-        switch (resultMode) {
-            case ANY:
-                return modified > 0;
+	@Override
+	public boolean addAll( Collection<? extends E> objects )
+	{
+		switch ( additionMode )
+		{
 
-            case ALL:
-                return modified >= parents.size();
-            default:
-                return false;
-        }
-    }
+			case ALL:
+				int modified = 0;
 
-    @Override
-    public boolean add(E object) {
-        switch (additionMode) {
+				for ( Collection<E> parent : parents )
+				{
+					if ( parent.addAll( objects ) )
+					{
+						modified++;
+					}
+				}
 
-            case ALL:
-                int modified = 0;
-                for (Collection<E> parent : parents) {
-                    if (parent.add(object)) {
-                        modified++;
-                    }
-                }
+				return resultBoolean( modified );
 
-                return resultBoolean(modified);
+			case LAST:
+				return parents.get( parents.size() - 1 ).addAll( objects );
+			default:
+				throw new IllegalStateException( "This SuperCollection has an invalid addition mode!" );
+		}
+	}
 
-            case LAST:
-                return parents.get(parents.size() - 1).add(object);
-            default:
-                throw new IllegalStateException(
-                        "This SuperCollection has an invalid addition mode!");
-        }
-    }
+	/**
+	 * Returns a new collection with the same contents as the parents.
+	 *
+	 * @return New mutable collection.
+	 */
+	public abstract Collection<E> asClone();
 
-    @Override
-    public boolean addAll(Collection<? extends E> objects) {
-        switch (additionMode) {
+	@Override
+	public void clear()
+	{
+		parents.forEach( Collection::clear );
+	}
 
-            case ALL:
-                int modified = 0;
+	@Override
+	public boolean contains( Object object )
+	{
+		for ( Collection<E> parent : parents )
+		{
+			if ( parent.contains( object ) )
+			{
+				return true;
+			}
+		}
 
-                for (Collection<E> parent : parents) {
-                    if (parent.addAll(objects)) {
-                        modified++;
-                    }
-                }
+		return false;
+	}
 
-                return resultBoolean(modified);
+	@Override
+	public boolean containsAll( Collection<?> objects )
+	{
+		for ( Object object : objects )
+		{
+			if ( !contains( object ) )
+			{
+				return false;
+			}
+		}
 
-            case LAST:
-                return parents.get(parents.size() - 1).addAll(objects);
-            default:
-                throw new IllegalStateException(
-                        "This SuperCollection has an invalid addition mode!");
-        }
-    }
+		return true;
+	}
 
-    @Override
-    public void clear() {
-        parents.forEach(Collection::clear);
-    }
+	@Override
+	public boolean equals( Object object )
+	{
+		// Avoid cloning if possible
+		if ( object == null )
+		{
+			return false;
+		}
 
-    @Override
-    public boolean contains(Object object) {
-        for (Collection<E> parent : parents) {
-            if (parent.contains(object)) {
-                return true;
-            }
-        }
+		if ( object == this )
+		{
+			return true;
+		}
 
-        return false;
-    }
+		if ( !getCollectionClass().isInstance( object ) )
+		{
+			return false;
+		}
 
-    @Override
-    public boolean containsAll(Collection<?> objects) {
-        for (Object object : objects) {
-            if (!contains(object)) {
-                return false;
-            }
-        }
+		// If trivial comparisons didn't work, fall back to clone (to remove duplicates) and compare
+		return asClone().equals( object );
+	}
 
-        return true;
-    }
+	public AdditionMode getAdditionMode()
+	{
+		return additionMode;
+	}
 
-    @Override
-    public boolean equals(Object object) {
-        // Avoid cloning if possible
-        if (object == null) {
-            return false;
-        }
+	public void setAdditionMode( AdditionMode additionMode )
+	{
+		this.additionMode = additionMode;
+	}
 
-        if (object == this) {
-            return true;
-        }
+	/**
+	 * Returns the class this SuperCollection implements.
+	 *
+	 * @return Collection class.
+	 */
+	protected abstract Class<? extends Collection> getCollectionClass();
 
-        if (!getCollectionClass().isInstance(object)) {
-            return false;
-        }
+	/**
+	 * Returns the list of parents.
+	 *
+	 * @return Parent list.
+	 */
+	public List<? extends Collection<E>> getParents()
+	{
+		// TODO: Replace with facade
+		return parents;
+	}
 
-        // If trivial comparisons didn't work, fall back to clone (to remove duplicates) and compare
-        return asClone().equals(object);
-    }
+	public ResultMode getResultMode()
+	{
+		return resultMode;
+	}
 
-    @Override
-    public int hashCode() {
-        int code = 0;
+	public void setResultMode( ResultMode resultMode )
+	{
+		this.resultMode = resultMode;
+	}
 
-        for (Collection<E> parent : parents) {
-            code += parent.hashCode();
-        }
+	@Override
+	public int hashCode()
+	{
+		int code = 0;
 
-        return code;
-    }
+		for ( Collection<E> parent : parents )
+		{
+			code += parent.hashCode();
+		}
 
-    @Override
-    public boolean isEmpty() {
-        for (Collection<E> parent : parents) {
-            if (!parent.isEmpty()) {
-                return false;
-            }
-        }
+		return code;
+	}
 
-        return true;
-    }
+	@Override
+	public boolean isEmpty()
+	{
+		for ( Collection<E> parent : parents )
+		{
+			if ( !parent.isEmpty() )
+			{
+				return false;
+			}
+		}
 
-    @Override
-    public Iterator<E> iterator() {
-        // Override if possible, because this is *really* slow
-        return asClone().iterator();
-    }
+		return true;
+	}
 
-    @Override
-    public boolean remove(Object object) {
-        int modified = 0;
+	@Override
+	public Iterator<E> iterator()
+	{
+		// Override if possible, because this is *really* slow
+		return asClone().iterator();
+	}
 
-        for (Collection<E> parent : parents) {
-            if (parent.remove(object)) {
-                modified++;
-            }
-        }
+	@Override
+	public boolean remove( Object object )
+	{
+		int modified = 0;
 
-        return resultBoolean(modified);
-    }
+		for ( Collection<E> parent : parents )
+		{
+			if ( parent.remove( object ) )
+			{
+				modified++;
+			}
+		}
 
-    @Override
-    public boolean removeAll(Collection<?> objects) {
-        int modified = 0;
+		return resultBoolean( modified );
+	}
 
-        for (Collection<E> parent : parents) {
-            if (parent.removeAll(objects)) {
-                modified++;
-            }
-        }
+	@Override
+	public boolean removeAll( Collection<?> objects )
+	{
+		int modified = 0;
 
-        return resultBoolean(modified);
-    }
+		for ( Collection<E> parent : parents )
+		{
+			if ( parent.removeAll( objects ) )
+			{
+				modified++;
+			}
+		}
 
-    @Override
-    public boolean retainAll(Collection<?> objects) {
-        int modified = 0;
+		return resultBoolean( modified );
+	}
 
-        for (Collection<E> parent : parents) {
-            if (parent.retainAll(objects)) {
-                modified++;
-            }
-        }
+	protected boolean resultBoolean( int modified )
+	{
+		switch ( resultMode )
+		{
+			case ANY:
+				return modified > 0;
 
-        return resultBoolean(modified);
-    }
+			case ALL:
+				return modified >= parents.size();
+			default:
+				return false;
+		}
+	}
 
-    @Override
-    public int size() {
-        // Override if possible
-        return asClone().size();
-    }
+	@Override
+	public boolean retainAll( Collection<?> objects )
+	{
+		int modified = 0;
 
-    @Override
-    public Object[] toArray() {
-        // Override if possible
-        return asClone().toArray();
-    }
+		for ( Collection<E> parent : parents )
+		{
+			if ( parent.retainAll( objects ) )
+			{
+				modified++;
+			}
+		}
 
-    @Override
-    public <T> T[] toArray(T[] array) {
-        // Override if possible
-        return asClone().toArray(array);
-    }
+		return resultBoolean( modified );
+	}
 
-    @Override
-    public String toString() {
-        // This is as other methods that call the asClone method, but since it's only used for
-        // eventual debugging, its performance doesn't really matter, so don't lose your time
-        // overriding and implementing it in subclasses.
-        return asClone().toString();
-    }
+	@Override
+	public int size()
+	{
+		// Override if possible
+		return asClone().size();
+	}
 
-    public enum ResultMode {
-        NEVER,
-        ALL,
-        ANY
-    }
+	@Override
+	public Object[] toArray()
+	{
+		// Override if possible
+		return asClone().toArray();
+	}
 
-    public enum AdditionMode {
-        ALL,
-        LAST
-    }
+	@Override
+	public <T> T[] toArray( T[] array )
+	{
+		// Override if possible
+		return asClone().toArray( array );
+	}
+
+	@Override
+	public String toString()
+	{
+		// This is as other methods that call the asClone method, but since it's only used for
+		// eventual debugging, its performance doesn't really matter, so don't lose your time
+		// overriding and implementing it in subclasses.
+		return asClone().toString();
+	}
+
+	public enum AdditionMode
+	{
+		ALL,
+		LAST
+	}
+
+	public enum ResultMode
+	{
+		NEVER,
+		ALL,
+		ANY
+	}
 }

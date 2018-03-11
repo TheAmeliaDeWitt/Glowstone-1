@@ -1,12 +1,25 @@
 package net.glowstone.net.message.play.game;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
 
-@Data
-public final class TimeMessage implements Message {
+public final class TimeMessage implements Message
+{
+	private final long time;
+	private final long worldAge;
 
-    private final long worldAge;
-    private final long time;
+	public TimeMessage( long worldAge, long time )
+	{
+		this.worldAge = worldAge;
+		this.time = time;
+	}
 
+	public long getTime()
+	{
+		return time;
+	}
+
+	public long getWorldAge()
+	{
+		return worldAge;
+	}
 }

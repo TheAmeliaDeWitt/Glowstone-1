@@ -6,52 +6,63 @@ import net.glowstone.block.blocktype.BlockDispenser;
 import net.glowstone.block.blocktype.BlockLiquid;
 import net.glowstone.block.blocktype.BlockType;
 import net.glowstone.block.entity.state.GlowDispenser;
+
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-public class EmptyBucketDispenseBehavior extends DefaultDispenseBehavior {
+public class EmptyBucketDispenseBehavior extends DefaultDispenseBehavior
+{
+	private BlockLiquid collectableLiquidAtBlock( GlowBlock target )
+	{
+		Material material = target.getType();
+		if ( material == null || material == Material.AIR )
+		{
+			return null;
+		}
 
-    @Override
-    protected ItemStack dispenseStack(GlowBlock block, ItemStack stack) {
-        GlowDispenser dispenser = (GlowDispenser) block.getState();
-        GlowBlock target = block.getRelative(BlockDispenser.getFacing(block));
-        BlockLiquid liquid = collectableLiquidAtBlock(target);
-        if (liquid == null) {
-            return super.dispenseStack(block, stack);
-        }
-        Material bucket = liquid.getBucketType();
-        target.setType(Material.AIR);
-        stack.setAmount(stack.getAmount() - 1);
-        if (stack.getAmount() == 0) {
-            stack.setAmount(1);
-            stack.setType(bucket);
-        } else {
-            ItemStack toPlace = new ItemStack(bucket);
-            ItemStack remaining = dispenser.placeInDispenser(toPlace);
-            if (remaining != null) {
-                INSTANCE.dispense(block, remaining);
-            }
-        }
+		BlockType type = ItemTable.instance().getBlock( material );
+		if ( !( type instanceof BlockLiquid ) )
+		{
+			return null;
+		}
 
-        return stack;
-    }
+		BlockLiquid liquid = ( BlockLiquid ) type;
+		if ( !liquid.isCollectible( target.getState() ) )
+		{
+			return null;
+		}
 
-    private BlockLiquid collectableLiquidAtBlock(GlowBlock target) {
-        Material material = target.getType();
-        if (material == null || material == Material.AIR) {
-            return null;
-        }
+		return liquid;
+	}
 
-        BlockType type = ItemTable.instance().getBlock(material);
-        if (!(type instanceof BlockLiquid)) {
-            return null;
-        }
+	@Override
+	protected ItemStack dispenseStack( GlowBlock block, ItemStack stack )
+	{
+		GlowDispenser dispenser = ( GlowDispenser ) block.getState();
+		GlowBlock target = block.getRelative( BlockDispenser.getFacing( block ) );
+		BlockLiquid liquid = collectableLiquidAtBlock( target );
+		if ( liquid == null )
+		{
+			return super.dispenseStack( block, stack );
+		}
+		Material bucket = liquid.getBucketType();
+		target.setType( Material.AIR );
+		stack.setAmount( stack.getAmount() - 1 );
+		if ( stack.getAmount() == 0 )
+		{
+			stack.setAmount( 1 );
+			stack.setType( bucket );
+		}
+		else
+		{
+			ItemStack toPlace = new ItemStack( bucket );
+			ItemStack remaining = dispenser.placeInDispenser( toPlace );
+			if ( remaining != null )
+			{
+				INSTANCE.dispense( block, remaining );
+			}
+		}
 
-        BlockLiquid liquid = (BlockLiquid) type;
-        if (!liquid.isCollectible(target.getState())) {
-            return null;
-        }
-
-        return liquid;
-    }
+		return stack;
+	}
 }

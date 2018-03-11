@@ -5,19 +5,22 @@ import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.MagmaCube;
 
-public class GlowMagmaCube extends GlowSlime implements MagmaCube {
+public class GlowMagmaCube extends GlowSlime implements MagmaCube
+{
+	public GlowMagmaCube( Location loc )
+	{
+		super( loc, EntityType.MAGMA_CUBE );
+	}
 
-    public GlowMagmaCube(Location loc) {
-        super(loc, EntityType.MAGMA_CUBE);
-    }
+	@Override
+	protected Sound getDeathSound()
+	{
+		return Sound.ENTITY_MAGMACUBE_DEATH;
+	}
 
-    @Override
-    protected Sound getDeathSound() {
-        return Sound.ENTITY_MAGMACUBE_DEATH;
-    }
-
-    @Override
-    protected Sound getHurtSound() {
-        return Sound.ENTITY_MAGMACUBE_HURT;
-    }
+	@Override
+	protected Sound getHurtSound()
+	{
+		return Sound.ENTITY_MAGMACUBE_HURT;
+	}
 }

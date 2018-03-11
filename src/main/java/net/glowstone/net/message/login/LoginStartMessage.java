@@ -1,15 +1,24 @@
 package net.glowstone.net.message.login;
 
 import com.flowpowered.network.AsyncableMessage;
-import lombok.Data;
 
-@Data
-public final class LoginStartMessage implements AsyncableMessage {
+public final class LoginStartMessage implements AsyncableMessage
+{
+	private final String username;
 
-    private final String username;
+	public LoginStartMessage( String username )
+	{
+		this.username = username;
+	}
 
-    @Override
-    public boolean isAsync() {
-        return true;
-    }
+	public String getUsername()
+	{
+		return username;
+	}
+
+	@Override
+	public boolean isAsync()
+	{
+		return true;
+	}
 }

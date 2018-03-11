@@ -1,12 +1,25 @@
 package net.glowstone.net.message.play.inv;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
 
-@Data
-public final class EnchantItemMessage implements Message {
+public final class EnchantItemMessage implements Message
+{
+	private final int enchantment;
+	private final int window;
 
-    private final int window;
-    private final int enchantment;
+	public EnchantItemMessage( int window, int enchantment )
+	{
+		this.window = window;
+		this.enchantment = enchantment;
+	}
 
+	public int getEnchantment()
+	{
+		return enchantment;
+	}
+
+	public int getWindow()
+	{
+		return window;
+	}
 }

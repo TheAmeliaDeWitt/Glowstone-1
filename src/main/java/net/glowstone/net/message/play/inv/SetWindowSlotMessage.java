@@ -1,14 +1,34 @@
 package net.glowstone.net.message.play.inv;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
+
 import org.bukkit.inventory.ItemStack;
 
-@Data
-public final class SetWindowSlotMessage implements Message {
+public final class SetWindowSlotMessage implements Message
+{
+	private final int id;
+	private final ItemStack item;
+	private final int slot;
 
-    private final int id;
-    private final int slot;
-    private final ItemStack item;
+	public SetWindowSlotMessage( int id, int slot, ItemStack item )
+	{
+		this.id = id;
+		this.slot = slot;
+		this.item = item;
+	}
 
+	public int getId()
+	{
+		return id;
+	}
+
+	public ItemStack getItem()
+	{
+		return item;
+	}
+
+	public int getSlot()
+	{
+		return slot;
+	}
 }

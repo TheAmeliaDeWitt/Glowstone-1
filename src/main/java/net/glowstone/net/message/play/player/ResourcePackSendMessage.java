@@ -1,11 +1,25 @@
 package net.glowstone.net.message.play.player;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
 
-@Data
-public final class ResourcePackSendMessage implements Message {
+public final class ResourcePackSendMessage implements Message
+{
+	private final String hash;
+	private final String url;
 
-    private final String url;
-    private final String hash;
+	public ResourcePackSendMessage( String url, String hash )
+	{
+		this.url = url;
+		this.hash = hash;
+	}
+
+	public String getHash()
+	{
+		return hash;
+	}
+
+	public String getUrl()
+	{
+		return url;
+	}
 }

@@ -1,40 +1,47 @@
 package net.glowstone.entity.monster;
 
 import net.glowstone.entity.meta.MetadataIndex;
+
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Snowman;
 
-public class GlowSnowman extends GlowMonster implements Snowman {
+public class GlowSnowman extends GlowMonster implements Snowman
+{
+	public GlowSnowman( Location loc )
+	{
+		super( loc, EntityType.SNOWMAN, 4 );
+		setBoundingBox( 0.7, 1.9 );
+	}
 
-    public GlowSnowman(Location loc) {
-        super(loc, EntityType.SNOWMAN, 4);
-        setBoundingBox(0.7, 1.9);
-    }
+	@Override
+	protected Sound getAmbientSound()
+	{
+		return Sound.ENTITY_SNOWMAN_AMBIENT;
+	}
 
-    @Override
-    public boolean isDerp() {
-        return metadata.getBit(MetadataIndex.SNOWMAN_NOHAT, 0x1);
-    }
+	@Override
+	protected Sound getDeathSound()
+	{
+		return Sound.ENTITY_SNOWMAN_DEATH;
+	}
 
-    @Override
-    public void setDerp(boolean derp) {
-        metadata.setBit(MetadataIndex.SNOWMAN_NOHAT, 0x1, derp);
-    }
+	@Override
+	protected Sound getHurtSound()
+	{
+		return Sound.ENTITY_SNOWMAN_HURT;
+	}
 
-    @Override
-    protected Sound getDeathSound() {
-        return Sound.ENTITY_SNOWMAN_DEATH;
-    }
+	@Override
+	public boolean isDerp()
+	{
+		return metadata.getBit( MetadataIndex.SNOWMAN_NOHAT, 0x1 );
+	}
 
-    @Override
-    protected Sound getHurtSound() {
-        return Sound.ENTITY_SNOWMAN_HURT;
-    }
-
-    @Override
-    protected Sound getAmbientSound() {
-        return Sound.ENTITY_SNOWMAN_AMBIENT;
-    }
+	@Override
+	public void setDerp( boolean derp )
+	{
+		metadata.setBit( MetadataIndex.SNOWMAN_NOHAT, 0x1, derp );
+	}
 }

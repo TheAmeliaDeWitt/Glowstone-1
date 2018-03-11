@@ -1,4 +1,4 @@
-# Glowstone is an OPEN Open Source Project
+# Limestone and the KilnAPI is an OPEN Open Source Project
 
 ## What?
 
@@ -9,10 +9,11 @@ Individuals making significant and valuable contributions are given commit-acces
 There are a few basic ground-rules for contributors:
 
 1. **No `--force` pushes** or modifying the Git history in any way.
-1. **Branches other than `dev` and LTS** ought to be used for ongoing work.
-1. **External API changes and significant modifications** ought to be subject to an **internal pull-request** to solicit feedback from other contributors.
-1. Internal pull-requests to solicit feedback are *encouraged* for any other non-trivial contribution but left to the discretion of the contributor.
-1. Contributors should attempt to adhere to the prevailing code-style.
+2. **Branches besides `master-dev`, `incubating`, and `stable`** ought to be short lived and used for experimental ongoing work. Please clean-up after yourself.
+3. **Don't commit to the `stable` branch,** it's only for formal releases declared stable by the project maintainer by pull-request only.
+4. **External API changes and significant modifications** ought to be subject to an **internal pull-request** to solicit feedback from other contributors.
+5. Internal pull-requests to solicit feedback are *encouraged* for any other non-trivial contribution but left to the discretion of the contributor.
+6. Contributors should attempt to adhere to the prevailing code-style.
 
 ## Releases
 
@@ -20,7 +21,7 @@ Declaring formal releases remains the prerogative of the project maintainer.
 
 ## How?
 
-For more information on how to start contributing to Glowstone, please view our [pull request how-to](https://github.com/GlowstoneMC/Glowstone/wiki/PR-Handling).
+For more information on how to start contributing, please view our [pull request how-to](https://github.com/TheAmeliaDeWitt/Limestone/wiki/PR-Handling).
 
 ## Changes to this arrangement
 

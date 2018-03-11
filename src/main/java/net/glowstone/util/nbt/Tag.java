@@ -1,58 +1,69 @@
 package net.glowstone.util.nbt;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 /**
  * Represents a single NBT tag.
  */
-@RequiredArgsConstructor
-public abstract class Tag<T> {
+public abstract class Tag<T>
+{
+	/**
+	 * The type of this tag.
+	 */
+	private final TagType type;
 
-    /**
-     * The type of this tag.
-     */
-    @Getter
-    private final TagType type;
+	public Tag( TagType type )
+	{
+		this.type = type;
+	}
 
-    /**
-     * Gets the value of this tag.
-     *
-     * @return The value of this tag.
-     */
-    public abstract T getValue();
+	@Override
+	public final boolean equals( Object o )
+	{
+		if ( this == o )
+		{
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() )
+		{
+			return false;
+		}
 
-    @Override
-    public final String toString() {
-        StringBuilder builder = new StringBuilder("TAG_");
-        builder.append(type.getName()).append(": ");
-        valueToString(builder);
-        return builder.toString();
-    }
+		Tag tag = ( Tag ) o;
 
-    @Override
-    public final boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+		return type == tag.type && getValue().equals( tag.getValue() );
+	}
 
-        Tag tag = (Tag) o;
+	public TagType getType()
+	{
+		return type;
+	}
 
-        return type == tag.type && getValue().equals(tag.getValue());
-    }
+	/**
+	 * Gets the value of this tag.
+	 *
+	 * @return The value of this tag.
+	 */
+	public abstract T getValue();
 
-    @Override
-    public final int hashCode() {
-        int result = type.hashCode();
-        result = 31 * result + getValue().hashCode();
-        return result;
-    }
+	@Override
+	public final int hashCode()
+	{
+		int result = type.hashCode();
+		result = 31 * result + getValue().hashCode();
+		return result;
+	}
 
-    protected void valueToString(StringBuilder builder) {
-        builder.append(getValue());
-    }
+	@Override
+	public final String toString()
+	{
+		StringBuilder builder = new StringBuilder( "TAG_" );
+		builder.append( type.getName() ).append( ": " );
+		valueToString( builder );
+		return builder.toString();
+	}
+
+	protected void valueToString( StringBuilder builder )
+	{
+		builder.append( getValue() );
+	}
 }
 

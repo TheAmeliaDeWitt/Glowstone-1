@@ -1,0 +1,82 @@
+buildscript {
+	repositories {
+		jcenter()
+		mavenCentral()
+		maven {
+			name = "sonatype"
+			url = "https://oss.sonatype.org/content/repositories/snapshots/"
+		}
+		maven {url 'https://repo.glowstone.net/repository/internal/'}
+		maven {url 'https://repo.glowstone.net/repository/snapshots/'}
+		maven {url 'http://repo.md-5.net/content/repositories/releases/'}
+		maven {url 'http://ci.emc.gs/nexus/content/groups/aikar/'}
+	}
+
+	dependencies {
+		classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'license'
+apply plugin: 'checkstyle'
+
+defaultTasks 'clean', 'build'
+
+group 'net.limestone'
+version '2018.0'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava {options.encoding = 'UTF-8'}
+
+javadoc {options.encoding = "UTF-8"}
+
+license {
+	header rootProject.file( 'etc/HEADER' )
+	ignoreFailures true
+	strictCheck true
+	mapping 'yaml', 'SCRIPT_STYLE'
+	mapping 'yml', 'SCRIPT_STYLE'
+	excludes( ['**/*.archive',
+	           '**/*.md5',
+	           '**/*.txt',
+	           '**/*.bmp',
+	           '**/*.png',
+	           '**/*.jpg',
+	           '**/*.yaml',
+	           '**/*.yml',
+	           '**/*.properties'] )
+	ext.year = Calendar.getInstance().get( Calendar.YEAR )
+	ext.name = 'Amelia DeWitt'
+	ext.email = 'theameliadewitt@gmail.com'
+}
+
+checkstyle {
+	configFile = rootProject.file( 'etc/checkstyle.xml' )
+	configProperties = ["basedir": project.projectDir]
+}
+
+dependencies {
+	testCompile( group: 'junit', name: 'junit', version: '4.12' ) {
+		exclude group: 'org.hamcrest'
+	}
+	testCompile 'org.hamcrest:hamcrest-library:1.3'
+
+	testCompile 'org.junit.jupiter:junit-jupiter-api:5.0.3'
+	testCompile 'org.junit.jupiter:junit-jupiter-params:5.0.3'
+	testCompile 'org.powermock:powermock-module-junit4:2.0.0-beta.5'
+	testCompile 'org.powermock:powermock-api-mockito2:2.0.0-beta.5'
+
+	runtime 'org.slf4j:slf4j-jdk14:1.7.25'
+	compile 'net.glowstone:glowkit:1.12.2-R2.0-SNAPSHOT'
+	compile 'jline:jline:2.14.5'
+	compile 'co.aikar:fastutil-lite:1.0'
+	compile 'com.flowpowered:flow-network:1.2.3-SNAPSHOT'
+	compile 'io.netty:netty-all:4.0.33.Final'
+	compile 'org.jogamp.jocl:jocl-main:2.3.2'
+	compile 'org.jogamp.gluegen:gluegen-rt-main:2.3.2'
+}

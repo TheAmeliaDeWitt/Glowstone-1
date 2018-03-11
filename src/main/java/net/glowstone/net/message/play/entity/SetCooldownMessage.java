@@ -1,13 +1,25 @@
 package net.glowstone.net.message.play.entity;
 
 import com.flowpowered.network.Message;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
-@Data
-@AllArgsConstructor
-public class SetCooldownMessage implements Message {
+public class SetCooldownMessage implements Message
+{
+	private final int cooldownTicks;
+	private final int itemId;
 
-    private final int itemId;
-    private final int cooldownTicks;
+	public SetCooldownMessage( int itemId, int cooldownTicks )
+	{
+		this.itemId = itemId;
+		this.cooldownTicks = cooldownTicks;
+	}
+
+	public int getCooldownTicks()
+	{
+		return cooldownTicks;
+	}
+
+	public int getItemId()
+	{
+		return itemId;
+	}
 }

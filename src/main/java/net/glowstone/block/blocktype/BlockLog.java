@@ -1,11 +1,10 @@
 package net.glowstone.block.blocktype;
 
-import java.util.Arrays;
-import java.util.Collection;
 import net.glowstone.GlowWorld;
 import net.glowstone.block.GlowBlock;
 import net.glowstone.block.GlowBlockState;
 import net.glowstone.entity.GlowPlayer;
+
 import org.bukkit.Material;
 import org.bukkit.TreeSpecies;
 import org.bukkit.block.BlockFace;
@@ -14,47 +13,59 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.material.Tree;
 import org.bukkit.util.Vector;
 
-public class BlockLog extends BlockType {
+import java.util.Arrays;
+import java.util.Collection;
 
-    @Override
-    public void placeBlock(GlowPlayer player, GlowBlockState state, BlockFace face,
-        ItemStack holding, Vector clickedLoc) {
-        super.placeBlock(player, state, face, holding, clickedLoc);
+public class BlockLog extends BlockType
+{
+	@Override
+	public void blockDestroy( GlowPlayer player, GlowBlock block, BlockFace face )
+	{
+		// vanilla set leaf decay check in a 9x9x9 neighboring when a log block is removed
+		GlowWorld world = block.getWorld();
+		for ( int x = 0; x < 9; x++ )
+		{
+			for ( int z = 0; z < 9; z++ )
+			{
+				for ( int y = 0; y < 9; y++ )
+				{
+					GlowBlock b = world.getBlockAt( block.getLocation().add( x - 4, y - 4, z - 4 ) );
+					if ( b.getType() == Material.LEAVES || b.getType() == Material.LEAVES_2 )
+					{
+						GlowBlockState state = b.getState();
+						if ( ( state.getRawData() & 0x08 ) == 0 && ( state.getRawData() & 0x04 ) == 0 )
+						{ // check decay is off and decay is on
+							// set decay check on for this leaves block
+							state.setRawData( ( byte ) ( state.getRawData() | 0x08 ) );
+							state.update( true );
+						}
+					}
+				}
+			}
+		}
+	}
 
-        MaterialData data = state.getData();
-        if (data instanceof Tree) {
-            ((Tree) data).setDirection(face);
-            ((Tree) data).setSpecies(TreeSpecies.getByData((byte) holding.getDurability()));
-        } else {
-            warnMaterialData(Tree.class, data);
-        }
-        state.setData(data);
-    }
+	@Override
+	public Collection<ItemStack> getDrops( GlowBlock block, ItemStack tool )
+	{
+		return Arrays.asList( new ItemStack( Material.LOG, 1, ( short ) ( block.getData() & 0x03 ) ) );
+	}
 
-    @Override
-    public Collection<ItemStack> getDrops(GlowBlock block, ItemStack tool) {
-        return Arrays.asList(new ItemStack(Material.LOG, 1, (short) (block.getData() & 0x03)));
-    }
+	@Override
+	public void placeBlock( GlowPlayer player, GlowBlockState state, BlockFace face, ItemStack holding, Vector clickedLoc )
+	{
+		super.placeBlock( player, state, face, holding, clickedLoc );
 
-    @Override
-    public void blockDestroy(GlowPlayer player, GlowBlock block, BlockFace face) {
-        // vanilla set leaf decay check in a 9x9x9 neighboring when a log block is removed
-        GlowWorld world = block.getWorld();
-        for (int x = 0; x < 9; x++) {
-            for (int z = 0; z < 9; z++) {
-                for (int y = 0; y < 9; y++) {
-                    GlowBlock b = world.getBlockAt(block.getLocation().add(x - 4, y - 4, z - 4));
-                    if (b.getType() == Material.LEAVES || b.getType() == Material.LEAVES_2) {
-                        GlowBlockState state = b.getState();
-                        if ((state.getRawData() & 0x08) == 0 && (state.getRawData() & 0x04)
-                            == 0) { // check decay is off and decay is on
-                            // set decay check on for this leaves block
-                            state.setRawData((byte) (state.getRawData() | 0x08));
-                            state.update(true);
-                        }
-                    }
-                }
-            }
-        }
-    }
+		MaterialData data = state.getData();
+		if ( data instanceof Tree )
+		{
+			( ( Tree ) data ).setDirection( face );
+			( ( Tree ) data ).setSpecies( TreeSpecies.getByData( ( byte ) holding.getDurability() ) );
+		}
+		else
+		{
+			warnMaterialData( Tree.class, data );
+		}
+		state.setData( data );
+	}
 }

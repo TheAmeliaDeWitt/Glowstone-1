@@ -1,26 +1,30 @@
 package net.glowstone.util.nbt;
 
-import lombok.Getter;
-
 /**
  * The {@code TAG_String} tag.
  */
-public final class StringTag extends Tag<String> {
+public final class StringTag extends Tag<String>
+{
+	/**
+	 * The value.
+	 */
+	private final String value;
 
-    /**
-     * The value.
-     */
-    @Getter
-    private final String value;
+	/**
+	 * Creates the tag.
+	 *
+	 * @param value The value.
+	 */
+	public StringTag( String value )
+	{
+		super( TagType.STRING );
+		this.value = value;
+	}
 
-    /**
-     * Creates the tag.
-     *
-     * @param value The value.
-     */
-    public StringTag(String value) {
-        super(TagType.STRING);
-        this.value = value;
-    }
+	@Override
+	public String getValue()
+	{
+		return value;
+	}
 }
 

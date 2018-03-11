@@ -1,8 +1,8 @@
 package net.glowstone.entity.monster;
 
-import lombok.Getter;
 import net.glowstone.Explosion;
 import net.glowstone.entity.meta.MetadataIndex;
+
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
@@ -13,114 +13,149 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Wither;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-public class GlowWither extends GlowBoss implements Wither {
+public class GlowWither extends GlowBoss implements Wither
+{
+	private Entity centerTarget;
+	private int invulnerableTicks;
+	private Entity leftTarget;
+	private Entity rightTarget;
 
-    @Getter
-    private int invulnerableTicks;
-    @Getter
-    private Entity centerTarget;
-    @Getter
-    private Entity leftTarget;
-    @Getter
-    private Entity rightTarget;
+	/**
+	 * Creates a wither.
+	 *
+	 * @param loc the location
+	 */
+	public GlowWither( Location loc )
+	{
+		super( loc, EntityType.WITHER, 300, "Wither", BarColor.BLUE, BarStyle.SOLID );
+		setInvulnerableTicks( 220 );
+		setCenterTarget( null );
+		setLeftTarget( null );
+		setRightTarget( null );
+		setHealth( getMaxHealth() / 3 );
+	}
 
-    /**
-     * Creates a wither.
-     *
-     * @param loc the location
-     */
-    public GlowWither(Location loc) {
-        super(loc, EntityType.WITHER, 300, "Wither", BarColor.BLUE, BarStyle.SOLID);
-        setInvulnerableTicks(220);
-        setCenterTarget(null);
-        setLeftTarget(null);
-        setRightTarget(null);
-        setHealth(getMaxHealth() / 3);
-    }
+	@Override
+	public void damage( double amount, Entity source, EntityDamageEvent.DamageCause cause )
+	{
+		if ( invulnerableTicks > 0 )
+		{
+			return;
+		}
+		super.damage( amount, source, cause );
+	}
 
-    @Override
-    public void damage(double amount, Entity source, EntityDamageEvent.DamageCause cause) {
-        if (invulnerableTicks > 0) {
-            return;
-        }
-        super.damage(amount, source, cause);
-    }
+	@Override
+	protected Sound getAmbientSound()
+	{
+		return Sound.ENTITY_WITHER_AMBIENT;
+	}
 
-    public void setInvulnerableTicks(int invulnerableTicks) {
-        this.invulnerableTicks = invulnerableTicks;
-        this.metadata.set(MetadataIndex.WITHER_INVULN_TIME, invulnerableTicks);
-    }
+	public Entity getCenterTarget()
+	{
+		return centerTarget;
+	}
 
-    /**
-     * Sets the center target.
-     *
-     * @param centerTarget the new center target
-     */
-    public void setCenterTarget(Entity centerTarget) {
-        this.centerTarget = centerTarget;
-        setTargetMetadata(centerTarget, MetadataIndex.WITHER_TARGET_1);
-    }
+	/**
+	 * Sets the center target.
+	 *
+	 * @param centerTarget the new center target
+	 */
+	public void setCenterTarget( Entity centerTarget )
+	{
+		this.centerTarget = centerTarget;
+		setTargetMetadata( centerTarget, MetadataIndex.WITHER_TARGET_1 );
+	}
 
-    private void setTargetMetadata(Entity target, MetadataIndex index) {
-        this.metadata.set(index, target == null ? 0 : target.getEntityId());
-    }
+	@Override
+	protected Sound getDeathSound()
+	{
+		return Sound.ENTITY_WITHER_DEATH;
+	}
 
-    /**
-     * Sets the left target.
-     *
-     * @param leftTarget the new left target
-     */
-    public void setLeftTarget(Entity leftTarget) {
-        this.leftTarget = leftTarget;
-        setTargetMetadata(leftTarget, MetadataIndex.WITHER_TARGET_2);
-    }
+	@Override
+	protected Sound getHurtSound()
+	{
+		return Sound.ENTITY_WITHER_HURT;
+	}
 
-    /**
-     * Sets the right target.
-     *
-     * @param rightTarget the new right target
-     */
-    public void setRightTarget(Entity rightTarget) {
-        this.rightTarget = rightTarget;
-        setTargetMetadata(rightTarget, MetadataIndex.WITHER_TARGET_3);
-    }
+	public int getInvulnerableTicks()
+	{
+		return invulnerableTicks;
+	}
 
-    @Override
-    public void pulse() {
-        super.pulse();
-        if (getInvulnerableTicks() > 0) {
-            setInvulnerableTicks(getInvulnerableTicks() - 1);
-            if (ticksLived % 10 == 0) {
-                setHealth(getHealth() + 10);
-            }
-            if (getInvulnerableTicks() == 1) {
-                getWorld().createExplosion(getLocation(), Explosion.POWER_WITHER_CREATION);
-                for (Player player : getServer().getOnlinePlayers()) {
-                    player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
-                }
-            }
-        } else if (ticksLived % 20 == 0) {
-            setHealth(getHealth() + 1);
-        }
-    }
+	public void setInvulnerableTicks( int invulnerableTicks )
+	{
+		this.invulnerableTicks = invulnerableTicks;
+		this.metadata.set( MetadataIndex.WITHER_INVULN_TIME, invulnerableTicks );
+	}
 
-    @Override
-    protected Sound getHurtSound() {
-        return Sound.ENTITY_WITHER_HURT;
-    }
+	public Entity getLeftTarget()
+	{
+		return leftTarget;
+	}
 
-    @Override
-    protected Sound getDeathSound() {
-        return Sound.ENTITY_WITHER_DEATH;
-    }
+	/**
+	 * Sets the left target.
+	 *
+	 * @param leftTarget the new left target
+	 */
+	public void setLeftTarget( Entity leftTarget )
+	{
+		this.leftTarget = leftTarget;
+		setTargetMetadata( leftTarget, MetadataIndex.WITHER_TARGET_2 );
+	}
 
-    @Override
-    protected Sound getAmbientSound() {
-        return Sound.ENTITY_WITHER_AMBIENT;
-    }
+	public Entity getRightTarget()
+	{
+		return rightTarget;
+	}
 
-    @Override
-    public boolean isUndead() {
-        return true;
-    }
+	/**
+	 * Sets the right target.
+	 *
+	 * @param rightTarget the new right target
+	 */
+	public void setRightTarget( Entity rightTarget )
+	{
+		this.rightTarget = rightTarget;
+		setTargetMetadata( rightTarget, MetadataIndex.WITHER_TARGET_3 );
+	}
+
+	@Override
+	public boolean isUndead()
+	{
+		return true;
+	}
+
+	@Override
+	public void pulse()
+	{
+		super.pulse();
+		if ( getInvulnerableTicks() > 0 )
+		{
+			setInvulnerableTicks( getInvulnerableTicks() - 1 );
+			if ( ticksLived % 10 == 0 )
+			{
+				setHealth( getHealth() + 10 );
+			}
+			if ( getInvulnerableTicks() == 1 )
+			{
+				getWorld().createExplosion( getLocation(), Explosion.POWER_WITHER_CREATION );
+				for ( Player player : getServer().getOnlinePlayers() )
+				{
+					player.playSound( player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f );
+				}
+			}
+		}
+		else if ( ticksLived % 20 == 0 )
+		{
+			setHealth( getHealth() + 1 );
+		}
+	}
+
+	private void setTargetMetadata( Entity target, MetadataIndex index )
+	{
+		this.metadata.set( index, target == null ? 0 : target.getEntityId() );
+	}
 }

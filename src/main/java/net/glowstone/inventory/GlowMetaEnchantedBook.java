@@ -1,135 +1,160 @@
 package net.glowstone.inventory;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import net.glowstone.util.nbt.CompoundTag;
+
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class GlowMetaEnchantedBook extends GlowMetaItem implements EnchantmentStorageMeta {
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-    private Map<Enchantment, Integer> storedEnchants;
+public class GlowMetaEnchantedBook extends GlowMetaItem implements EnchantmentStorageMeta
+{
+	private Map<Enchantment, Integer> storedEnchants;
 
-    /**
-     * Creates an instance by copying from the given {@link ItemMeta}. If that item is another
-     * {@link EnchantmentStorageMeta}, its enchantments are copied; otherwise, the new book has no
-     * enchantments.
-     * @param meta the {@link ItemMeta} to copy
-     */
-    public GlowMetaEnchantedBook(ItemMeta meta) {
-        super(meta);
+	/**
+	 * Creates an instance by copying from the given {@link ItemMeta}. If that item is another
+	 * {@link EnchantmentStorageMeta}, its enchantments are copied; otherwise, the new book has no
+	 * enchantments.
+	 *
+	 * @param meta the {@link ItemMeta} to copy
+	 */
+	public GlowMetaEnchantedBook( ItemMeta meta )
+	{
+		super( meta );
 
-        if (!(meta instanceof EnchantmentStorageMeta)) {
-            return;
-        }
+		if ( !( meta instanceof EnchantmentStorageMeta ) )
+		{
+			return;
+		}
 
-        EnchantmentStorageMeta book = (EnchantmentStorageMeta) meta;
-        if (book.hasStoredEnchants()) {
-            storedEnchants = new HashMap<>(book instanceof GlowMetaEnchantedBook
-                    ? ((GlowMetaEnchantedBook) book).storedEnchants : book.getStoredEnchants());
-        }
-    }
+		EnchantmentStorageMeta book = ( EnchantmentStorageMeta ) meta;
+		if ( book.hasStoredEnchants() )
+		{
+			storedEnchants = new HashMap<>( book instanceof GlowMetaEnchantedBook ? ( ( GlowMetaEnchantedBook ) book ).storedEnchants : book.getStoredEnchants() );
+		}
+	}
 
-    @Override
-    public boolean isApplicable(Material material) {
-        return material == Material.ENCHANTED_BOOK;
-    }
+	@Override
+	public boolean addStoredEnchant( Enchantment ench, int level, boolean ignoreLevelRestriction )
+	{
+		if ( storedEnchants == null )
+		{
+			storedEnchants = new HashMap<>( 4 );
+		}
 
-    @Override
-    public Map<String, Object> serialize() {
-        Map<String, Object> map = super.serialize();
+		if ( ignoreLevelRestriction || level >= ench.getStartLevel() && level <= ench.getMaxLevel() )
+		{
+			Integer old = storedEnchants.put( ench, level );
+			return old == null || old != level;
+		}
+		return false;
+	}
 
-        map.put("meta-type", "ENCHANTED");
+	@Override
+	public GlowMetaEnchantedBook clone()
+	{
+		return new GlowMetaEnchantedBook( this );
+	}
 
-        if (hasStoredEnchants()) {
-            serializeEnchants("stored-enchants", map, storedEnchants);
-        }
+	@Override
+	public int getStoredEnchantLevel( Enchantment ench )
+	{
+		return hasStoredEnchant( ench ) ? storedEnchants.get( ench ) : 0;
+	}
 
-        return map;
-    }
+	@Override
+	public Map<Enchantment, Integer> getStoredEnchants()
+	{
+		return hasStoredEnchants() ? Collections.unmodifiableMap( storedEnchants ) : Collections.emptyMap();
+	}
 
-    @Override
-    void writeNbt(CompoundTag tag) {
-        super.writeNbt(tag);
+	@Override
+	public boolean hasConflictingStoredEnchant( Enchantment ench )
+	{
+		if ( !hasStoredEnchants() )
+		{
+			return false;
+		}
 
-        writeNbtEnchants("StoredEnchantments", tag, storedEnchants);
-    }
+		for ( Enchantment e : storedEnchants.keySet() )
+		{
+			if ( e.conflictsWith( ench ) )
+			{
+				return true;
+			}
+		}
 
-    @Override
-    void readNbt(CompoundTag tag) {
-        super.readNbt(tag);
+		return false;
+	}
 
-        //TODO currently ignoring level restriction, is that right?
-        Map<Enchantment, Integer> enchants = readNbtEnchants("StoredEnchantments", tag);
-        if (enchants != null) {
-            if (storedEnchants == null) {
-                storedEnchants = enchants;
-            } else {
-                storedEnchants.putAll(enchants);
-            }
-        }
-    }
+	@Override
+	public boolean hasStoredEnchant( Enchantment ench )
+	{
+		return hasStoredEnchants() && storedEnchants.containsKey( ench );
+	}
 
-    @Override
-    public boolean hasStoredEnchants() {
-        return storedEnchants != null && !storedEnchants.isEmpty();
-    }
+	@Override
+	public boolean hasStoredEnchants()
+	{
+		return storedEnchants != null && !storedEnchants.isEmpty();
+	}
 
-    @Override
-    public boolean hasStoredEnchant(Enchantment ench) {
-        return hasStoredEnchants() && storedEnchants.containsKey(ench);
-    }
+	@Override
+	public boolean isApplicable( Material material )
+	{
+		return material == Material.ENCHANTED_BOOK;
+	}
 
-    @Override
-    public int getStoredEnchantLevel(Enchantment ench) {
-        return hasStoredEnchant(ench) ? storedEnchants.get(ench) : 0;
-    }
+	@Override
+	void readNbt( CompoundTag tag )
+	{
+		super.readNbt( tag );
 
-    @Override
-    public Map<Enchantment, Integer> getStoredEnchants() {
-        return hasStoredEnchants() ? Collections.unmodifiableMap(storedEnchants)
-                : Collections.emptyMap();
-    }
+		//TODO currently ignoring level restriction, is that right?
+		Map<Enchantment, Integer> enchants = readNbtEnchants( "StoredEnchantments", tag );
+		if ( enchants != null )
+		{
+			if ( storedEnchants == null )
+			{
+				storedEnchants = enchants;
+			}
+			else
+			{
+				storedEnchants.putAll( enchants );
+			}
+		}
+	}
 
-    @Override
-    public boolean addStoredEnchant(Enchantment ench, int level, boolean ignoreLevelRestriction) {
-        if (storedEnchants == null) {
-            storedEnchants = new HashMap<>(4);
-        }
+	@Override
+	public boolean removeStoredEnchant( Enchantment ench ) throws IllegalArgumentException
+	{
+		return hasStoredEnchants() && storedEnchants.remove( ench ) != null;
+	}
 
-        if (ignoreLevelRestriction || level >= ench.getStartLevel() && level <= ench
-                .getMaxLevel()) {
-            Integer old = storedEnchants.put(ench, level);
-            return old == null || old != level;
-        }
-        return false;
-    }
+	@Override
+	public Map<String, Object> serialize()
+	{
+		Map<String, Object> map = super.serialize();
 
-    @Override
-    public boolean removeStoredEnchant(Enchantment ench) throws IllegalArgumentException {
-        return hasStoredEnchants() && storedEnchants.remove(ench) != null;
-    }
+		map.put( "meta-type", "ENCHANTED" );
 
-    @Override
-    public boolean hasConflictingStoredEnchant(Enchantment ench) {
-        if (!hasStoredEnchants()) {
-            return false;
-        }
+		if ( hasStoredEnchants() )
+		{
+			serializeEnchants( "stored-enchants", map, storedEnchants );
+		}
 
-        for (Enchantment e : storedEnchants.keySet()) {
-            if (e.conflictsWith(ench)) {
-                return true;
-            }
-        }
+		return map;
+	}
 
-        return false;
-    }
+	@Override
+	void writeNbt( CompoundTag tag )
+	{
+		super.writeNbt( tag );
 
-    @Override
-    public GlowMetaEnchantedBook clone() {
-        return new GlowMetaEnchantedBook(this);
-    }
+		writeNbtEnchants( "StoredEnchantments", tag, storedEnchants );
+	}
 }

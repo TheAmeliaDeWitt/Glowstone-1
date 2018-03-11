@@ -1,22 +1,33 @@
 package net.glowstone.net.message.play.player;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
+
 import org.bukkit.Location;
 
 /**
  * Base class for player update messages.
  */
-@Data
-public class PlayerUpdateMessage implements Message {
+public class PlayerUpdateMessage implements Message
+{
+	private final boolean onGround;
 
-    private final boolean onGround;
+	public PlayerUpdateMessage( boolean onGround )
+	{
+		this.onGround = onGround;
+	}
 
-    public void update(Location location) {
-        // do nothing
-    }
+	public boolean isOnGround()
+	{
+		return onGround;
+	}
 
-    public boolean moved() {
-        return false;
-    }
+	public boolean moved()
+	{
+		return false;
+	}
+
+	public void update( Location location )
+	{
+		// do nothing
+	}
 }

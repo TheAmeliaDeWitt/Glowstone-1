@@ -8,32 +8,37 @@ import java.util.Set;
 /**
  * Set which delegates to other sets.
  */
-public class SuperSet<E> extends SuperCollection<E> implements Set<E> {
+public class SuperSet<E> extends SuperCollection<E> implements Set<E>
+{
+	public SuperSet()
+	{
+		super( AdditionMode.ALL );
+	}
 
-    public SuperSet() {
-        super(AdditionMode.ALL);
-    }
+	public SuperSet( List<Set<E>> parents )
+	{
+		super( parents, AdditionMode.ALL );
+	}
 
-    public SuperSet(List<Set<E>> parents) {
-        super(parents, AdditionMode.ALL);
-    }
+	@Override
+	public Set<E> asClone()
+	{
+		Set<E> output = new HashSet<>();
 
-    @Override
-    public List<Set<E>> getParents() {
-        return (List<Set<E>>) super.getParents();
-    }
+		getParents().forEach( output::addAll );
 
-    @Override
-    public Set<E> asClone() {
-        Set<E> output = new HashSet<>();
+		return output;
+	}
 
-        getParents().forEach(output::addAll);
+	@Override
+	protected Class<? extends Collection> getCollectionClass()
+	{
+		return Set.class;
+	}
 
-        return output;
-    }
-
-    @Override
-    protected Class<? extends Collection> getCollectionClass() {
-        return Set.class;
-    }
+	@Override
+	public List<Set<E>> getParents()
+	{
+		return ( List<Set<E>> ) super.getParents();
+	}
 }

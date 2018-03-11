@@ -1,13 +1,27 @@
 package net.glowstone.net.message.play.game;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
+
 import net.glowstone.util.TextMessage;
 
-@Data
-public final class UserListHeaderFooterMessage implements Message {
+public final class UserListHeaderFooterMessage implements Message
+{
+	private final TextMessage footer;
+	private final TextMessage header;
 
-    private final TextMessage header;
-    private final TextMessage footer;
+	public UserListHeaderFooterMessage( TextMessage header, TextMessage footer )
+	{
+		this.header = header;
+		this.footer = footer;
+	}
 
+	public TextMessage getFooter()
+	{
+		return footer;
+	}
+
+	public TextMessage getHeader()
+	{
+		return header;
+	}
 }

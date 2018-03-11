@@ -1,13 +1,9 @@
 package net.glowstone.inventory;
 
 import com.google.common.primitives.Ints;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import lombok.Getter;
-import lombok.Setter;
+
 import net.glowstone.util.nbt.CompoundTag;
+
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.FireworkEffect.Type;
@@ -15,130 +11,160 @@ import org.bukkit.Material;
 import org.bukkit.inventory.meta.FireworkEffectMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class GlowMetaFireworkEffect extends GlowMetaItem implements FireworkEffectMeta {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-    @Getter
-    @Setter
-    private FireworkEffect effect;
+public class GlowMetaFireworkEffect extends GlowMetaItem implements FireworkEffectMeta
+{
+	static FireworkEffect toEffect( CompoundTag explosion )
+	{
+		boolean flicker = false;
+		boolean trail = false;
+		Type type;
+		List<Color> colors = new ArrayList<>();
+		List<Color> fadeColors = new ArrayList<>();
 
-    /**
-     * Creates an instance by copying from the given {@link ItemMeta}. If that item is another
-     * {@link FireworkEffectMeta}, it is copied fully; otherwise, the {@link FireworkEffect} is
-     * null.
-     * @param meta the {@link ItemMeta} to copy
-     */
-    public GlowMetaFireworkEffect(ItemMeta meta) {
-        super(meta);
+		int[] colorInts = explosion.getIntArray( "Colors" );
+		for ( int color : colorInts )
+		{
+			colors.add( Color.fromRGB( color ) );
+		}
 
-        if (meta instanceof FireworkEffectMeta) {
-            effect = ((FireworkEffectMeta) meta).getEffect();
-        }
-    }
+		type = Type.values()[explosion.getByte( "Type" )];
 
-    static FireworkEffect toEffect(CompoundTag explosion) {
-        boolean flicker = false;
-        boolean trail = false;
-        Type type;
-        List<Color> colors = new ArrayList<>();
-        List<Color> fadeColors = new ArrayList<>();
+		if ( explosion.isByte( "Flicker" ) )
+		{
+			flicker = explosion.getBool( "Flicker" );
+		}
+		if ( explosion.isByte( "Trail" ) )
+		{
+			trail = explosion.getBool( "Trail" );
+		}
 
-        int[] colorInts = explosion.getIntArray("Colors");
-        for (int color : colorInts) {
-            colors.add(Color.fromRGB(color));
-        }
+		if ( explosion.isIntArray( "FadeColors" ) )
+		{
+			int[] fadeInts = explosion.getIntArray( "FadeColors" );
+			for ( int fade : fadeInts )
+			{
+				fadeColors.add( Color.fromRGB( fade ) );
+			}
+		}
 
-        type = Type.values()[explosion.getByte("Type")];
+		return FireworkEffect.builder().flicker( flicker ).trail( trail ).with( type ).withColor( colors ).withFade( fadeColors ).build();
+	}
 
-        if (explosion.isByte("Flicker")) {
-            flicker = explosion.getBool("Flicker");
-        }
-        if (explosion.isByte("Trail")) {
-            trail = explosion.getBool("Trail");
-        }
+	static CompoundTag toExplosion( FireworkEffect effect )
+	{
+		CompoundTag explosion = new CompoundTag();
 
-        if (explosion.isIntArray("FadeColors")) {
-            int[] fadeInts = explosion.getIntArray("FadeColors");
-            for (int fade : fadeInts) {
-                fadeColors.add(Color.fromRGB(fade));
-            }
-        }
+		if ( effect.hasFlicker() )
+		{
+			explosion.putBool( "Flicker", true );
+		}
+		if ( effect.hasTrail() )
+		{
+			explosion.putBool( "Trail", true );
+		}
 
-        return FireworkEffect.builder()
-            .flicker(flicker)
-            .trail(trail)
-            .with(type)
-            .withColor(colors)
-            .withFade(fadeColors)
-            .build();
-    }
+		explosion.putByte( "Type", effect.getType().ordinal() );
 
-    static CompoundTag toExplosion(FireworkEffect effect) {
-        CompoundTag explosion = new CompoundTag();
+		List<Color> colors = effect.getColors();
+		List<Integer> colorInts = colors.stream().map( Color::asRGB ).collect( Collectors.toList() );
+		explosion.putIntArray( "Colors", Ints.toArray( colorInts ) );
 
-        if (effect.hasFlicker()) {
-            explosion.putBool("Flicker", true);
-        }
-        if (effect.hasTrail()) {
-            explosion.putBool("Trail", true);
-        }
+		List<Color> fade = effect.getFadeColors();
+		if ( !fade.isEmpty() )
+		{
+			List<Integer> fadeInts = fade.stream().map( Color::asRGB ).collect( Collectors.toList() );
+			explosion.putIntArray( "FadeColors", Ints.toArray( fadeInts ) );
+		}
 
-        explosion.putByte("Type", effect.getType().ordinal());
+		return explosion;
+	}
+	private FireworkEffect effect;
 
-        List<Color> colors = effect.getColors();
-        List<Integer> colorInts = colors.stream().map(Color::asRGB).collect(Collectors.toList());
-        explosion.putIntArray("Colors", Ints.toArray(colorInts));
+	/**
+	 * Creates an instance by copying from the given {@link ItemMeta}. If that item is another
+	 * {@link FireworkEffectMeta}, it is copied fully; otherwise, the {@link FireworkEffect} is
+	 * null.
+	 *
+	 * @param meta the {@link ItemMeta} to copy
+	 */
+	public GlowMetaFireworkEffect( ItemMeta meta )
+	{
+		super( meta );
 
-        List<Color> fade = effect.getFadeColors();
-        if (!fade.isEmpty()) {
-            List<Integer> fadeInts = fade.stream().map(Color::asRGB).collect(Collectors.toList());
-            explosion.putIntArray("FadeColors", Ints.toArray(fadeInts));
-        }
+		if ( meta instanceof FireworkEffectMeta )
+		{
+			effect = ( ( FireworkEffectMeta ) meta ).getEffect();
+		}
+	}
 
-        return explosion;
-    }
+	@Override
+	public GlowMetaFireworkEffect clone()
+	{
+		return new GlowMetaFireworkEffect( this );
+	}
 
-    @Override
-    public boolean isApplicable(Material material) {
-        return material == Material.FIREWORK_CHARGE;
-    }
+	@Override
+	public FireworkEffect getEffect()
+	{
+		return effect;
+	}
 
-    @Override
-    public GlowMetaFireworkEffect clone() {
-        return new GlowMetaFireworkEffect(this);
-    }
+	@Override
+	public void setEffect( FireworkEffect effect )
+	{
+		this.effect = effect;
+	}
 
-    @Override
-    void writeNbt(CompoundTag tag) {
-        super.writeNbt(tag);
+	@Override
+	public boolean hasEffect()
+	{
+		return effect != null;
+	}
 
-        if (hasEffect()) {
-            tag.putCompound("Explosion", toExplosion(effect));
-        }
-    }
+	@Override
+	public boolean isApplicable( Material material )
+	{
+		return material == Material.FIREWORK_CHARGE;
+	}
 
-    @Override
-    void readNbt(CompoundTag tag) {
-        super.readNbt(tag);
+	@Override
+	void readNbt( CompoundTag tag )
+	{
+		super.readNbt( tag );
 
-        if (tag.isCompound("Explosion")) {
-            effect = toEffect(tag.getCompound("Explosion"));
-        }
-    }
+		if ( tag.isCompound( "Explosion" ) )
+		{
+			effect = toEffect( tag.getCompound( "Explosion" ) );
+		}
+	}
 
-    @Override
-    public Map<String, Object> serialize() {
-        Map<String, Object> result = super.serialize();
-        result.put("meta-type", "CHARGE");
+	@Override
+	public Map<String, Object> serialize()
+	{
+		Map<String, Object> result = super.serialize();
+		result.put( "meta-type", "CHARGE" );
 
-        if (hasEffect()) {
-            result.put("effect", effect.serialize());
-        }
+		if ( hasEffect() )
+		{
+			result.put( "effect", effect.serialize() );
+		}
 
-        return result;
-    }
+		return result;
+	}
 
-    @Override
-    public boolean hasEffect() {
-        return effect != null;
-    }
+	@Override
+	void writeNbt( CompoundTag tag )
+	{
+		super.writeNbt( tag );
+
+		if ( hasEffect() )
+		{
+			tag.putCompound( "Explosion", toExplosion( effect ) );
+		}
+	}
 }

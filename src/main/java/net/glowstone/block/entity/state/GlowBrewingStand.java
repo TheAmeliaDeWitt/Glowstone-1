@@ -1,53 +1,79 @@
 package net.glowstone.block.entity.state;
 
-import lombok.Getter;
-import lombok.Setter;
 import net.glowstone.block.GlowBlock;
 import net.glowstone.block.entity.BrewingStandEntity;
+
 import org.bukkit.block.BrewingStand;
 import org.bukkit.inventory.BrewerInventory;
 
-public class GlowBrewingStand extends GlowContainer implements BrewingStand {
+public class GlowBrewingStand extends GlowContainer implements BrewingStand
+{
+	private int brewingTime;
+	private int fuelLevel;
 
-    @Getter
-    @Setter
-    private int brewingTime;
-    @Getter
-    @Setter
-    private int fuelLevel;
+	public GlowBrewingStand( GlowBlock block )
+	{
+		super( block );
+		brewingTime = getBlockEntity().getBrewTime();
+	}
 
-    public GlowBrewingStand(GlowBlock block) {
-        super(block);
-        brewingTime = getBlockEntity().getBrewTime();
-    }
+	public GlowBrewingStand( GlowBlock block, int brewTime )
+	{
+		super( block );
+		this.brewingTime = brewTime;
+	}
 
-    public GlowBrewingStand(GlowBlock block, int brewTime) {
-        super(block);
-        this.brewingTime = brewTime;
-    }
+	private BrewingStandEntity getBlockEntity()
+	{
+		return ( BrewingStandEntity ) getBlock().getBlockEntity();
+	}
 
-    private BrewingStandEntity getBlockEntity() {
-        return (BrewingStandEntity) getBlock().getBlockEntity();
-    }
+	@Override
+	public int getBrewingTime()
+	{
+		return brewingTime;
+	}
 
-    @Override
-    public BrewerInventory getInventory() {
-        return (BrewerInventory) getBlockEntity().getInventory();
-    }
+	@Override
+	public void setBrewingTime( int brewingTime )
+	{
+		this.brewingTime = brewingTime;
+	}
 
-    @Override
-    public boolean update(boolean force, boolean applyPhysics) {
-        boolean result = super.update(force, applyPhysics);
-        if (result) {
-            BrewingStandEntity stand = getBlockEntity();
-            stand.setBrewTime(brewingTime);
-            stand.updateInRange();
-        }
-        return result;
-    }
+	@Override
+	public int getFuelLevel()
+	{
+		return fuelLevel;
+	}
 
-    @Override
-    public BrewerInventory getSnapshotInventory() {
-        throw new UnsupportedOperationException();
-    }
+	@Override
+	public void setFuelLevel( int fuelLevel )
+	{
+		this.fuelLevel = fuelLevel;
+	}
+
+	@Override
+	public BrewerInventory getInventory()
+	{
+		return ( BrewerInventory ) getBlockEntity().getInventory();
+	}
+
+	@Override
+	public BrewerInventory getSnapshotInventory()
+	{
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean update( boolean force, boolean applyPhysics )
+	{
+		boolean result = super.update( force, applyPhysics );
+		if ( result )
+		{
+			BrewingStandEntity stand = getBlockEntity();
+			stand.setBrewTime( brewingTime );
+			stand.updateInRange();
+		}
+		return result;
+	}
 }

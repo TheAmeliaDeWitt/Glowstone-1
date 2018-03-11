@@ -1,11 +1,18 @@
 package net.glowstone.net.message.play.game;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
 
-@Data
-public final class PingMessage implements Message {
+public final class PingMessage implements Message
+{
+	private final long pingId;
 
-    private final long pingId;
+	public PingMessage( long pingId )
+	{
+		this.pingId = pingId;
+	}
 
+	public long getPingId()
+	{
+		return pingId;
+	}
 }

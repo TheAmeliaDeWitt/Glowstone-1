@@ -1,13 +1,27 @@
 package net.glowstone.util.loot;
 
-import java.util.Collection;
-import lombok.Data;
 import org.bukkit.inventory.ItemStack;
 
-@Data
-public class LootData {
+import java.util.Collection;
 
-    private final Collection<ItemStack> items;
-    private final int experience;
+public class LootData
+{
+	private final int experience;
+	private final Collection<ItemStack> items;
 
+	public LootData( Collection<ItemStack> items, int experience )
+	{
+		this.items = items;
+		this.experience = experience;
+	}
+
+	public int getExperience()
+	{
+		return experience;
+	}
+
+	public Collection<ItemStack> getItems()
+	{
+		return items;
+	}
 }

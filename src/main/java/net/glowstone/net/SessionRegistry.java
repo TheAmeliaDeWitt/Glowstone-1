@@ -9,36 +9,39 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @author Graham Edgecombe
  */
-public final class SessionRegistry {
+public final class SessionRegistry
+{
+	/**
+	 * A list of the sessions.
+	 */
+	private final ConcurrentMap<GlowSession, Boolean> sessions = new ConcurrentHashMap<>();
 
-    /**
-     * A list of the sessions.
-     */
-    private final ConcurrentMap<GlowSession, Boolean> sessions = new ConcurrentHashMap<>();
+	/**
+	 * Adds a new session.
+	 *
+	 * @param session The session to add.
+	 */
+	public void add( GlowSession session )
+	{
+		sessions.put( session, true );
+	}
 
-    /**
-     * Pulses all the sessions.
-     */
-    public void pulse() {
-        sessions.keySet().forEach(GlowSession::pulse);
-    }
+	/**
+	 * Pulses all the sessions.
+	 */
+	public void pulse()
+	{
+		sessions.keySet().forEach( GlowSession::pulse );
+	}
 
-    /**
-     * Adds a new session.
-     *
-     * @param session The session to add.
-     */
-    public void add(GlowSession session) {
-        sessions.put(session, true);
-    }
-
-    /**
-     * Removes a session.
-     *
-     * @param session The session to remove.
-     */
-    public void remove(GlowSession session) {
-        sessions.remove(session);
-    }
+	/**
+	 * Removes a session.
+	 *
+	 * @param session The session to remove.
+	 */
+	public void remove( GlowSession session )
+	{
+		sessions.remove( session );
+	}
 
 }

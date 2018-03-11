@@ -1,11 +1,18 @@
 package net.glowstone.net.message.play.player;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
 
-@Data
-public final class CameraMessage implements Message {
+public final class CameraMessage implements Message
+{
+	private final int cameraId;
 
-    private final int cameraId;
+	public CameraMessage( int cameraId )
+	{
+		this.cameraId = cameraId;
+	}
 
+	public int getCameraId()
+	{
+		return cameraId;
+	}
 }

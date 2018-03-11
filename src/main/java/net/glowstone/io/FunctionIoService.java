@@ -1,9 +1,10 @@
 package net.glowstone.io;
 
-import java.util.List;
 import net.glowstone.data.CommandFunction;
 
-public interface FunctionIoService {
+import java.util.List;
 
-    List<CommandFunction> readFunctions();
+public interface FunctionIoService
+{
+	List<CommandFunction> readFunctions();
 }

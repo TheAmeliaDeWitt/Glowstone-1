@@ -6,47 +6,58 @@ import java.util.NoSuchElementException;
 /**
  * An Iterator which delegates in other iterators.
  */
-public class SuperIterator<E> implements Iterator<E> {
+public class SuperIterator<E> implements Iterator<E>
+{
+	private final Iterator<Iterable<E>> parentIterator;
+	private Iterator<E> childIterator;
 
-    private final Iterator<Iterable<E>> parentIterator;
-    private Iterator<E> childIterator;
+	public SuperIterator( Iterable<Iterable<E>> iterable )
+	{
+		this( iterable.iterator() );
+	}
 
-    public SuperIterator(Iterable<Iterable<E>> iterable) {
-        this(iterable.iterator());
-    }
+	public SuperIterator( Iterator<Iterable<E>> parentIterator )
+	{
+		this.parentIterator = parentIterator;
+	}
 
-    public SuperIterator(Iterator<Iterable<E>> parentIterator) {
-        this.parentIterator = parentIterator;
-    }
+	@Override
+	public boolean hasNext()
+	{
+		while ( childIterator == null || !childIterator.hasNext() )
+		{
+			if ( parentIterator.hasNext() )
+			{
+				childIterator = parentIterator.next().iterator();
+			}
+			else
+			{
+				return false;
+			}
+		}
 
-    @Override
-    public boolean hasNext() {
-        while (childIterator == null || !childIterator.hasNext()) {
-            if (parentIterator.hasNext()) {
-                childIterator = parentIterator.next().iterator();
-            } else {
-                return false;
-            }
-        }
+		return true;
+	}
 
-        return true;
-    }
+	@Override
+	public E next()
+	{
+		if ( !hasNext() )
+		{
+			throw new NoSuchElementException();
+		}
 
-    @Override
-    public E next() {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
+		return childIterator.next();
+	}
 
-        return childIterator.next();
-    }
+	@Override
+	public void remove()
+	{
+		if ( childIterator == null )
+		{
+			throw new IllegalStateException( "next() must be called before using remove()" );
+		}
 
-    @Override
-    public void remove() {
-        if (childIterator == null) {
-            throw new IllegalStateException("next() must be called before using remove()");
-        }
-
-        childIterator.remove();
-    }
+		childIterator.remove();
+	}
 }

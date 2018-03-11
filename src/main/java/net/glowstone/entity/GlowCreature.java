@@ -1,61 +1,77 @@
 package net.glowstone.entity;
 
 import com.flowpowered.network.Message;
-import java.util.LinkedList;
-import java.util.List;
-import lombok.Getter;
-import lombok.Setter;
+
 import net.glowstone.net.message.play.entity.EntityHeadRotationMessage;
 import net.glowstone.net.message.play.entity.SpawnMobMessage;
 import net.glowstone.util.Position;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * Represents a creature entity such as a pig.
  */
-public class GlowCreature extends GlowLivingEntity implements Creature {
+public class GlowCreature extends GlowLivingEntity implements Creature
+{
+	/**
+	 * The type of monster.
+	 */
+	private final EntityType type;
+	/**
+	 * The monster's target.
+	 */
+	private LivingEntity target;
 
-    /**
-     * The type of monster.
-     */
-    @Getter
-    private final EntityType type;
+	/**
+	 * Creates a new monster.
+	 *
+	 * @param location  The location of the monster.
+	 * @param type      The type of monster.
+	 * @param maxHealth The max health of the monster.
+	 */
+	public GlowCreature( Location location, EntityType type, double maxHealth )
+	{
+		super( location, maxHealth );
+		this.type = type;
+	}
 
-    /**
-     * The monster's target.
-     */
-    @Getter
-    @Setter
-    private LivingEntity target;
+	@Override
+	public List<Message> createSpawnMessage()
+	{
+		List<Message> result = new LinkedList<>();
 
-    /**
-     * Creates a new monster.
-     *
-     * @param location The location of the monster.
-     * @param type The type of monster.
-     * @param maxHealth The max health of the monster.
-     */
-    public GlowCreature(Location location, EntityType type, double maxHealth) {
-        super(location, maxHealth);
-        this.type = type;
-    }
+		// spawn mob
+		result.add( new SpawnMobMessage( entityId, getUniqueId(), type.getTypeId(), location, metadata.getEntryList() ) );
 
-    @Override
-    public List<Message> createSpawnMessage() {
-        List<Message> result = new LinkedList<>();
+		// head facing
+		result.add( new EntityHeadRotationMessage( entityId, Position.getIntYaw( location ) ) );
 
-        // spawn mob
-        result.add(new SpawnMobMessage(
-                entityId, getUniqueId(), type.getTypeId(), location, metadata.getEntryList()));
+		// todo: equipment
+		//result.add(createEquipmentMessage());
+		return result;
+	}
 
-        // head facing
-        result.add(new EntityHeadRotationMessage(entityId, Position.getIntYaw(location)));
+	@Override
+	public LivingEntity getTarget()
+	{
+		return target;
+	}
 
-        // todo: equipment
-        //result.add(createEquipmentMessage());
-        return result;
-    }
+	@Override
+	public void setTarget( LivingEntity target )
+	{
+		this.target = target;
+	}
+
+	@Override
+	public EntityType getType()
+	{
+		return type;
+	}
 }

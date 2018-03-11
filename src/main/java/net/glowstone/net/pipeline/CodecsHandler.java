@@ -4,60 +4,63 @@ import com.flowpowered.network.Codec;
 import com.flowpowered.network.Codec.CodecRegistration;
 import com.flowpowered.network.Message;
 import com.flowpowered.network.util.ByteBufUtils;
+
+import net.glowstone.GlowServer;
+import net.glowstone.net.protocol.GlowProtocol;
+
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.EncoderException;
 import io.netty.handler.codec.MessageToMessageCodec;
-import java.util.List;
-import net.glowstone.GlowServer;
-import net.glowstone.net.protocol.GlowProtocol;
 
 /**
  * Experimental pipeline component.
  */
-public final class CodecsHandler extends MessageToMessageCodec<ByteBuf, Message> {
+public final class CodecsHandler extends MessageToMessageCodec<ByteBuf, Message>
+{
+	private final GlowProtocol protocol;
 
-    private final GlowProtocol protocol;
+	public CodecsHandler( GlowProtocol protocol )
+	{
+		this.protocol = protocol;
+	}
 
-    public CodecsHandler(GlowProtocol protocol) {
-        this.protocol = protocol;
-    }
+	@Override
+	protected void decode( ChannelHandlerContext ctx, ByteBuf msg, List<Object> out ) throws Exception
+	{
+		// find codec and read header
+		Codec<?> codec = protocol.newReadHeader( msg );
 
-    @Override
-    protected void encode(ChannelHandlerContext ctx, Message msg, List<Object> out)
-        throws Exception {
-        // find codec
-        Class<? extends Message> clazz = msg.getClass();
-        CodecRegistration reg = protocol.getCodecRegistration(clazz);
-        if (reg == null) {
-            throw new EncoderException("Unknown message type: " + clazz + ".");
-        }
+		// read body
+		Message decoded = codec.decode( msg );
+		if ( msg.readableBytes() > 0 )
+		{
+			GlowServer.logger.warning( "Leftover bytes (" + msg.readableBytes() + ") after decoding: " + decoded );
+		}
 
-        // write header
-        ByteBuf headerBuf = ctx.alloc().buffer(8);
-        ByteBufUtils.writeVarInt(headerBuf, reg.getOpcode());
+		out.add( decoded );
+	}
 
-        // write body
-        ByteBuf messageBuf = ctx.alloc().buffer();
-        messageBuf = reg.getCodec().encode(messageBuf, msg);
+	@Override
+	protected void encode( ChannelHandlerContext ctx, Message msg, List<Object> out ) throws Exception
+	{
+		// find codec
+		Class<? extends Message> clazz = msg.getClass();
+		CodecRegistration reg = protocol.getCodecRegistration( clazz );
+		if ( reg == null )
+			throw new EncoderException( "Unknown message type: " + clazz + "." );
 
-        out.add(Unpooled.wrappedBuffer(headerBuf, messageBuf));
-    }
+		// write header
+		ByteBuf headerBuf = ctx.alloc().buffer( 8 );
+		ByteBufUtils.writeVarInt( headerBuf, reg.getOpcode() );
 
-    @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out)
-        throws Exception {
-        // find codec and read header
-        Codec<?> codec = protocol.newReadHeader(msg);
+		// write body
+		ByteBuf messageBuf = ctx.alloc().buffer();
+		messageBuf = reg.getCodec().encode( messageBuf, msg );
 
-        // read body
-        Message decoded = codec.decode(msg);
-        if (msg.readableBytes() > 0) {
-            GlowServer.logger
-                .warning("Leftover bytes (" + msg.readableBytes() + ") after decoding: " + decoded);
-        }
-
-        out.add(decoded);
-    }
+		out.add( Unpooled.wrappedBuffer( headerBuf, messageBuf ) );
+	}
 }

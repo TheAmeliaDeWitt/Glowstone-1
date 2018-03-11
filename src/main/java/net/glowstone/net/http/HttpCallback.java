@@ -1,9 +1,8 @@
 package net.glowstone.net.http;
 
-public interface HttpCallback {
+public interface HttpCallback
+{
+	void done( String response );
 
-    void done(String response);
-
-    void error(Throwable throwable);
-
+	void error( Throwable throwable );
 }

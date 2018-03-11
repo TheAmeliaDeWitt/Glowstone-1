@@ -3,84 +3,96 @@ package net.glowstone.block.itemtype;
 import net.glowstone.EventFactory;
 import net.glowstone.entity.GlowPlayer;
 import net.glowstone.util.InventoryUtil;
+
 import org.bukkit.GameMode;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class ItemFood extends ItemTimedUsage {
+public class ItemFood extends ItemTimedUsage
+{
+	private int foodLevel;
+	private float saturation;
 
-    private int foodLevel;
-    private float saturation;
+	public ItemFood( int foodLevel, float saturation )
+	{
+		this.foodLevel = foodLevel;
+		this.saturation = saturation;
+	}
 
-    public ItemFood(int foodLevel, float saturation) {
-        this.foodLevel = foodLevel;
-        this.saturation = saturation;
-    }
+	ItemFood()
+	{ // class should override getFoodLevel and getSaturation
+		foodLevel = 0;
+		saturation = 0;
+	}
 
-    ItemFood() { // class should override getFoodLevel and getSaturation
-        foodLevel = 0;
-        saturation = 0;
-    }
+	/**
+	 * Player attempts to eat this food.
+	 *
+	 * @param player the eating player
+	 * @param item   the item stack eaten from
+	 *
+	 * @return whether food was eaten successfully
+	 */
+	public boolean eat( GlowPlayer player, ItemStack item )
+	{
+		if ( !handleEat( player, item ) )
+		{
+			return false;
+		}
+		InventoryUtil.consumeHeldItem( player, item );
+		return true;
+	}
 
-    protected int getFoodLevel(ItemStack stack) {
-        return foodLevel;
-    }
+	@Override
+	public void endUse( GlowPlayer player, ItemStack item )
+	{
+		if ( player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE )
+		{
+			player.setUsageItem( null );
+			player.setUsageTime( 0 );
+		}
+	}
 
-    protected float getSaturation(ItemStack stack) {
-        return saturation;
-    }
+	protected int getFoodLevel( ItemStack stack )
+	{
+		return foodLevel;
+	}
 
-    protected boolean handleEat(GlowPlayer player, ItemStack item) {
-        PlayerItemConsumeEvent event1 = new PlayerItemConsumeEvent(player, item);
-        EventFactory.callEvent(event1);
-        if (event1.isCancelled()) {
-            return false;
-        }
+	protected float getSaturation( ItemStack stack )
+	{
+		return saturation;
+	}
 
-        FoodLevelChangeEvent event2 = new FoodLevelChangeEvent(player,
-            getFoodLevel(item) + player.getFoodLevel());
-        EventFactory.callEvent(event2);
+	protected boolean handleEat( GlowPlayer player, ItemStack item )
+	{
+		PlayerItemConsumeEvent event1 = new PlayerItemConsumeEvent( player, item );
+		EventFactory.callEvent( event1 );
+		if ( event1.isCancelled() )
+		{
+			return false;
+		}
 
-        if (!event2.isCancelled()) {
-            player.setFoodLevelAndSaturation(event2.getFoodLevel(), getSaturation(item));
-        }
+		FoodLevelChangeEvent event2 = new FoodLevelChangeEvent( player, getFoodLevel( item ) + player.getFoodLevel() );
+		EventFactory.callEvent( event2 );
 
-        player.setUsageItem(null);
-        player.setUsageTime(0);
-        return true;
-    }
+		if ( !event2.isCancelled() )
+		{
+			player.setFoodLevelAndSaturation( event2.getFoodLevel(), getSaturation( item ) );
+		}
 
-    /**
-     * Player attempts to eat this food.
-     *
-     * @param player the eating player
-     * @param item the item stack eaten from
-     * @return whether food was eaten successfully
-     */
-    public boolean eat(GlowPlayer player, ItemStack item) {
-        if (!handleEat(player, item)) {
-            return false;
-        }
-        InventoryUtil.consumeHeldItem(player, item);
-        return true;
-    }
+		player.setUsageItem( null );
+		player.setUsageTime( 0 );
+		return true;
+	}
 
-    @Override
-    public void startUse(GlowPlayer player, ItemStack item) {
-        if (player.getGameMode() == GameMode.SURVIVAL
-            || player.getGameMode() == GameMode.ADVENTURE) {
-            player.setUsageItem(item);
-            player.setUsageTime(32);
-        }
-    }
-
-    @Override
-    public void endUse(GlowPlayer player, ItemStack item) {
-        if (player.getGameMode() == GameMode.SURVIVAL
-            || player.getGameMode() == GameMode.ADVENTURE) {
-            player.setUsageItem(null);
-            player.setUsageTime(0);
-        }
-    }
+	@Override
+	public void startUse( GlowPlayer player, ItemStack item )
+	{
+		if ( player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE )
+		{
+			player.setUsageItem( item );
+			player.setUsageTime( 32 );
+		}
+	}
 }

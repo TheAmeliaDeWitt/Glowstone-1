@@ -1,8 +1,8 @@
-# Glowstone Code of Conduct
+# Code of Conduct
 
 ## Purpose
 
-One of the Glowstone Project's top priorities is to foster an open and
+One of the Limestone Project's top priorities is to foster an open and
 welcoming environment. As such, it is our responsibility as contributors
 and maintainers to ensure our project is inclusive and harassment-free
 for everyone — regardless of their characteristics. This includes (but is not limited
@@ -10,8 +10,8 @@ to) age, body size, disability, ethnicity, gender identity and expression,
 level of experience, nationality, personal appearance, race, religion,
 or sexual identity and orientation.
 
-We believe that diversity is a huge strength and in order to encourge
-everyone who participates in the Glowstone Project to help create a welcoming
+We believe that diversity is a huge strength and in order to encourage
+everyone who participates in the Limestone Project to help create a welcoming
 and productive atmosphere, we have outlined our expectations for this community,
 consequences for unacceptable behavior, and where you can go for help.
 
@@ -45,7 +45,7 @@ We expect all participants in our community to:
   different perspectives on issues. Even if you don't understand why someone
   has a certain viewpoint on an issue, refrain from blaming and instead focus
   on resolving problems and learning from mistakes.
-* **Focus on what is best for the community.** With a project like Glowstone,
+* **Focus on what is best for the community.** With a project like Limestone,
   your work and contributions will affect many other people and you should
   take the consequences of your actions, good or bad, into account when making
   decisions.
@@ -59,14 +59,11 @@ in our community.
 
 Examples of unacceptable behavior by participants include:
 
-* The use of sexualized language or imagery and unwelcome sexual attention or
-  advances
-* Trolling, insulting/derogatory comments, and personal or political attacks
-* Public or private harassment (generally, if someone asks you to stop, then stop)
-* Publishing others' private information — such as a physical or electronic
-  address — without explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+* The use of sexualized language or imagery and unwelcome sexual attention or advances.
+* Trolling, insulting/derogatory comments, and personal or political attacks.
+* Public or private harassment (generally, if someone asks you to stop, then stop).
+* Publishing others' private information — such as a physical or electronic address — without explicit permission.
+* Other conduct which could reasonably be considered inappropriate in a professional setting.
 
 ## Our Responsibilities
 
@@ -84,11 +81,11 @@ that they deem inappropriate, threatening, offensive, or harmful.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting mastercoms at `mastercoms@tutanota.de`.
+reported by contacting Amelia DeWitt at `theameliadewitt@gmail.com`.
 All complaints will be reviewed and investigated and will result in a response
 that is deemed necessary and appropriate to the circumstances. The project team
 is obligated to maintain confidentiality with regard to the reporter of
-an incident. If you have a report about `mastercoms`, please contact `gdude2002`.
+an incident.
 
 Project maintainers who do not follow or enforce the Code of Conduct in
 good faith may face temporary or permanent repercussions as determined by
@@ -114,7 +111,7 @@ of representing a project or community include using an official project
 e-mail address, posting via an official social media account, or acting
 as an appointed representative at an online or offline event. For example,
 this includes (but is not limited to) all of our project's GitHub pages,
-our website, forums, IRC channel, testing server and Discord.
+our website, forums, testing server, and Discord.
 
 ## Attribution
 

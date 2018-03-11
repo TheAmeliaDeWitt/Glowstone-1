@@ -1,16 +1,24 @@
 package net.glowstone.net.message.status;
 
 import com.flowpowered.network.AsyncableMessage;
-import lombok.Data;
 
-@Data
-public final class StatusPingMessage implements AsyncableMessage {
+public final class StatusPingMessage implements AsyncableMessage
+{
+	private final long time;
 
-    private final long time;
+	public StatusPingMessage( long time )
+	{
+		this.time = time;
+	}
 
-    @Override
-    public boolean isAsync() {
-        return true;
-    }
+	public long getTime()
+	{
+		return time;
+	}
 
+	@Override
+	public boolean isAsync()
+	{
+		return true;
+	}
 }

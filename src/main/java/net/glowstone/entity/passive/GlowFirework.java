@@ -1,12 +1,7 @@
 package net.glowstone.entity.passive;
 
 import com.flowpowered.network.Message;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import lombok.Getter;
-import lombok.Setter;
+
 import net.glowstone.EventFactory;
 import net.glowstone.entity.GlowEntity;
 import net.glowstone.entity.Summonable;
@@ -14,6 +9,7 @@ import net.glowstone.entity.meta.MetadataIndex;
 import net.glowstone.net.message.play.entity.EntityMetadataMessage;
 import net.glowstone.net.message.play.entity.SpawnObjectMessage;
 import net.glowstone.util.InventoryUtil;
+
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,207 +25,260 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.util.Vector;
 
-public class GlowFirework extends GlowEntity implements Firework, Summonable {
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
-    private static final ItemStack DEFAULT_FIREWORK_ITEM = new ItemStack(Material.FIREWORK);
-    @Getter
-    @Setter
-    private UUID spawningEntity;
-    @Getter
-    private LivingEntity boostedEntity;
-    /**
-     * The number of ticks before this fireworks rocket explodes.
-     */
-    @Getter
-    @Setter
-    private int lifeTime;
+public class GlowFirework extends GlowEntity implements Firework, Summonable
+{
+	private static final ItemStack DEFAULT_FIREWORK_ITEM = new ItemStack( Material.FIREWORK );
+	private LivingEntity boostedEntity;
+	/**
+	 * The number of ticks before this fireworks rocket explodes.
+	 */
+	private int lifeTime;
+	private UUID spawningEntity;
 
-    public GlowFirework(Location location) {
-        super(location);
-        setSize(0.25f, 0.25f);
-    }
+	public GlowFirework( Location location )
+	{
+		super( location );
+		setSize( 0.25f, 0.25f );
+	}
 
-    /**
-     * Creates an instance.
-     *
-     * @param location the location
-     * @param spawningEntity TODO: document this parameter
-     * @param boostedEntity TODO: document this parameter
-     * @param item the firework rocket as an item
-     */
-    public GlowFirework(Location location, UUID spawningEntity, LivingEntity boostedEntity,
-        ItemStack item) {
-        super(location);
-        this.spawningEntity = spawningEntity;
-        setBoostedEntity(boostedEntity);
-        setSize(0.25f, 0.25f);
+	/**
+	 * Creates an instance.
+	 *
+	 * @param location       the location
+	 * @param spawningEntity TODO: document this parameter
+	 * @param boostedEntity  TODO: document this parameter
+	 * @param item           the firework rocket as an item
+	 */
+	public GlowFirework( Location location, UUID spawningEntity, LivingEntity boostedEntity, ItemStack item )
+	{
+		super( location );
+		this.spawningEntity = spawningEntity;
+		setBoostedEntity( boostedEntity );
+		setSize( 0.25f, 0.25f );
 
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        setVelocity(new Vector(random.nextGaussian() * 0.001, 0.05, random.nextGaussian() * 0.001));
+		ThreadLocalRandom random = ThreadLocalRandom.current();
+		setVelocity( new Vector( random.nextGaussian() * 0.001, 0.05, random.nextGaussian() * 0.001 ) );
 
-        setFireworkItem(item);
-        int power = getFireworkMeta().getPower();
-        lifeTime = calculateLifeTime(power);
-    }
+		setFireworkItem( item );
+		int power = getFireworkMeta().getPower();
+		lifeTime = calculateLifeTime( power );
+	}
 
-    @Override
-    public EntityType getType() {
-        return EntityType.FIREWORK;
-    }
+	private int calculateLifeTime( int power )
+	{
+		ThreadLocalRandom random = ThreadLocalRandom.current();
+		return ( ( power + 1 ) * 10 + random.nextInt( 6 ) + random.nextInt( 7 ) );
+	}
 
-    @Override
-    public List<Message> createSpawnMessage() {
-        double x = location.getX();
-        double y = location.getY();
-        double z = location.getZ();
+	@Override
+	public List<Message> createSpawnMessage()
+	{
+		double x = location.getX();
+		double y = location.getY();
+		double z = location.getZ();
 
-        return Arrays.asList(
-            new SpawnObjectMessage(
-                    entityId, UUID.randomUUID(), SpawnObjectMessage.FIREWORK, x, y, z, 0, 0),
-            new EntityMetadataMessage(entityId, metadata.getEntryList())
-        );
-    }
+		return Arrays.asList( new SpawnObjectMessage( entityId, UUID.randomUUID(), SpawnObjectMessage.FIREWORK, x, y, z, 0, 0 ), new EntityMetadataMessage( entityId, metadata.getEntryList() ) );
+	}
 
-    @Override
-    public FireworkMeta getFireworkMeta() {
-        return ((FireworkMeta) getFireworkItem().getItemMeta()).clone();
-    }
+	@Override
+	public void detonate()
+	{
+		if ( this.isDead() )
+		{
+			return;
+		}
+		setTicksLived( lifeTime );
+	}
 
-    @Override
-    public void setFireworkMeta(FireworkMeta fireworkMeta) {
-        if (fireworkMeta == null) {
-            return;
-        }
+	private void explode()
+	{
+		if ( !EventFactory.callEvent( new FireworkExplodeEvent( this ) ).isCancelled() )
+		{
+			this.playEffect( EntityEffect.FIREWORK_EXPLODE );
 
-        ItemStack item = getFireworkItem();
-        item.setItemMeta(fireworkMeta.clone());
-        setFireworkItem(item);
-        this.lifeTime = calculateLifeTime(fireworkMeta.getPower());
-    }
+			int effectsSize = getFireworkMeta().getEffectsSize();
+			if ( effectsSize > 0 )
+			{
+				if ( boostedEntity != null )
+				{
+					boostedEntity.damage( ( 5 + effectsSize * 2 ), DamageCause.ENTITY_EXPLOSION );
+				}
 
-    /**
-     * Get the underlying firework item.
-     *
-     * @return The Firework ItemStack of this Firework entity, or a new Firework ItemStack
-     */
-    public ItemStack getFireworkItem() {
-        ItemStack item = this.metadata.getItem(MetadataIndex.FIREWORK_INFO);
-        if (InventoryUtil.isEmpty(item) || !Material.FIREWORK.equals(item.getType())) {
-            item = DEFAULT_FIREWORK_ITEM.clone();
-        }
-        return item;
-    }
+				List<Entity> nearbyEntities = this.getNearbyEntities( 2.5, 2.5, 2.5 );
+				for ( Entity nearbyEntity : nearbyEntities )
+				{
+					if ( !( nearbyEntity instanceof LivingEntity ) )
+					{
+						continue;
+					}
+					if ( this.getLocation().distanceSquared( nearbyEntity.getLocation() ) > 25 )
+					{
+						continue;
+					}
 
-    /**
-     * Set the firework item of this firework entity. If an empty ItemStack, or none of the type
-     * {{@link Material#FIREWORK}} was given, a new Firework ItemStack will be created.
-     *
-     * @param item FireWork Item this entity should use
-     */
-    public void setFireworkItem(ItemStack item) {
-        if (InventoryUtil.isEmpty(item) || !Material.FIREWORK.equals(item.getType())) {
-            item = DEFAULT_FIREWORK_ITEM.clone();
-        }
-        this.metadata.set(MetadataIndex.FIREWORK_INFO, item.clone());
-    }
+					// "The explosion of firework rockets deals 2.5 hearts of damage, per firework
+					// star."
+					( ( LivingEntity ) nearbyEntity ).damage( ( effectsSize * 5 ), DamageCause.ENTITY_EXPLOSION );
+				}
+			}
+		}
+		remove();
+	}
 
-    private int calculateLifeTime(int power) {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        return ((power + 1) * 10 + random.nextInt(6) + random.nextInt(7));
-    }
+	@Override
+	public LivingEntity getBoostedEntity()
+	{
+		return boostedEntity;
+	}
 
-    @Override
-    public void detonate() {
-        if (this.isDead()) {
-            return;
-        }
-        setTicksLived(lifeTime);
-    }
+	private void setBoostedEntity( LivingEntity boostedEntity )
+	{
+		this.boostedEntity = boostedEntity;
+		if ( boostedEntity != null )
+		{
+			metadata.set( MetadataIndex.FIREWORK_ENTITY, boostedEntity.getEntityId() );
+		}
+	}
 
-    @Override
-    public void pulse() {
-        super.pulse();
+	/**
+	 * Get the underlying firework item.
+	 *
+	 * @return The Firework ItemStack of this Firework entity, or a new Firework ItemStack
+	 */
+	public ItemStack getFireworkItem()
+	{
+		ItemStack item = this.metadata.getItem( MetadataIndex.FIREWORK_INFO );
+		if ( InventoryUtil.isEmpty( item ) || !Material.FIREWORK.equals( item.getType() ) )
+		{
+			item = DEFAULT_FIREWORK_ITEM.clone();
+		}
+		return item;
+	}
 
-        if (ticksLived == 1) {
-            world.playSound(this.location, Sound.ENTITY_FIREWORK_LAUNCH, SoundCategory.AMBIENT, 3,
-                1);
-        }
+	/**
+	 * Set the firework item of this firework entity. If an empty ItemStack, or none of the type
+	 * {{@link Material#FIREWORK}} was given, a new Firework ItemStack will be created.
+	 *
+	 * @param item FireWork Item this entity should use
+	 */
+	public void setFireworkItem( ItemStack item )
+	{
+		if ( InventoryUtil.isEmpty( item ) || !Material.FIREWORK.equals( item.getType() ) )
+		{
+			item = DEFAULT_FIREWORK_ITEM.clone();
+		}
+		this.metadata.set( MetadataIndex.FIREWORK_INFO, item.clone() );
+	}
 
-        if (ticksLived > lifeTime) {
-            explode();
-        }
-    }
+	@Override
+	public FireworkMeta getFireworkMeta()
+	{
+		return ( ( FireworkMeta ) getFireworkItem().getItemMeta() ).clone();
+	}
 
-    private void explode() {
-        if (!EventFactory.callEvent(new FireworkExplodeEvent(this)).isCancelled()) {
-            this.playEffect(EntityEffect.FIREWORK_EXPLODE);
+	@Override
+	public void setFireworkMeta( FireworkMeta fireworkMeta )
+	{
+		if ( fireworkMeta == null )
+		{
+			return;
+		}
 
-            int effectsSize = getFireworkMeta().getEffectsSize();
-            if (effectsSize > 0) {
-                if (boostedEntity != null) {
-                    boostedEntity.damage((5 + effectsSize * 2), DamageCause.ENTITY_EXPLOSION);
-                }
+		ItemStack item = getFireworkItem();
+		item.setItemMeta( fireworkMeta.clone() );
+		setFireworkItem( item );
+		this.lifeTime = calculateLifeTime( fireworkMeta.getPower() );
+	}
 
-                List<Entity> nearbyEntities = this.getNearbyEntities(2.5, 2.5, 2.5);
-                for (Entity nearbyEntity : nearbyEntities) {
-                    if (!(nearbyEntity instanceof LivingEntity)) {
-                        continue;
-                    }
-                    if (this.getLocation().distanceSquared(nearbyEntity.getLocation()) > 25) {
-                        continue;
-                    }
+	public int getLifeTime()
+	{
+		return lifeTime;
+	}
 
-                    // "The explosion of firework rockets deals 2.5 hearts of damage, per firework
-                    // star."
-                    ((LivingEntity) nearbyEntity)
-                        .damage((effectsSize * 5), DamageCause.ENTITY_EXPLOSION);
-                }
-            }
-        }
-        remove();
-    }
+	public void setLifeTime( int lifeTime )
+	{
+		this.lifeTime = lifeTime;
+	}
 
-    @Override
-    protected void pulsePhysics() {
-        // TODO: proper physics
-        if (this.boostedEntity == null) {
-            // Fireworks velocity is not affected by airdrag or gravity
-            // These values are static
-            velocity.setX(velocity.getX() * 1.15);
-            velocity.setY(velocity.getY() + 0.04);
-            velocity.setZ(velocity.getZ() * 1.15);
-            setVelocity(velocity);
-        } else {
-            Vector direction = boostedEntity.getLocation().getDirection();
-            Vector velocity = boostedEntity.getVelocity();
+	@Override
+	public UUID getSpawningEntity()
+	{
+		return spawningEntity;
+	}
 
-            // close enough approximation of vanillas velocity for boosted entity
-            double dx = direction.getX() * 0.1 + (direction.getX() * 1.5 - velocity.getX()) * 0.5;
-            double dy = direction.getY() * 0.1 + (direction.getY() * 1.5 - velocity.getY()) * 0.5;
-            double dz = direction.getZ() * 0.1 + (direction.getZ() * 1.5 - velocity.getZ()) * 0.5;
+	public void setSpawningEntity( UUID spawningEntity )
+	{
+		this.spawningEntity = spawningEntity;
+	}
 
-            velocity.setX(velocity.getX() + dx);
-            velocity.setY(velocity.getY() + dy);
-            velocity.setZ(velocity.getZ() + dz);
+	@Override
+	public EntityType getType()
+	{
+		return EntityType.FIREWORK;
+	}
 
-            boostedEntity.setVelocity(velocity);
-            this.setVelocity(velocity);
+	@Override
+	public void pulse()
+	{
+		super.pulse();
 
-            Location location = boostedEntity.getLocation().add(velocity);
-            if (boostedEntity instanceof GlowEntity) {
-                ((GlowEntity) boostedEntity).setRawLocation(location, false);
-            } else {
-                boostedEntity.teleport(location);
-            }
-        }
+		if ( ticksLived == 1 )
+		{
+			world.playSound( this.location, Sound.ENTITY_FIREWORK_LAUNCH, SoundCategory.AMBIENT, 3, 1 );
+		}
 
-        setRawLocation(this.location.add(velocity), false);
-    }
+		if ( ticksLived > lifeTime )
+		{
+			explode();
+		}
+	}
 
-    private void setBoostedEntity(LivingEntity boostedEntity) {
-        this.boostedEntity = boostedEntity;
-        if (boostedEntity != null) {
-            metadata.set(MetadataIndex.FIREWORK_ENTITY, boostedEntity.getEntityId());
-        }
-    }
+	@Override
+	protected void pulsePhysics()
+	{
+		// TODO: proper physics
+		if ( this.boostedEntity == null )
+		{
+			// Fireworks velocity is not affected by airdrag or gravity
+			// These values are static
+			velocity.setX( velocity.getX() * 1.15 );
+			velocity.setY( velocity.getY() + 0.04 );
+			velocity.setZ( velocity.getZ() * 1.15 );
+			setVelocity( velocity );
+		}
+		else
+		{
+			Vector direction = boostedEntity.getLocation().getDirection();
+			Vector velocity = boostedEntity.getVelocity();
+
+			// close enough approximation of vanillas velocity for boosted entity
+			double dx = direction.getX() * 0.1 + ( direction.getX() * 1.5 - velocity.getX() ) * 0.5;
+			double dy = direction.getY() * 0.1 + ( direction.getY() * 1.5 - velocity.getY() ) * 0.5;
+			double dz = direction.getZ() * 0.1 + ( direction.getZ() * 1.5 - velocity.getZ() ) * 0.5;
+
+			velocity.setX( velocity.getX() + dx );
+			velocity.setY( velocity.getY() + dy );
+			velocity.setZ( velocity.getZ() + dz );
+
+			boostedEntity.setVelocity( velocity );
+			this.setVelocity( velocity );
+
+			Location location = boostedEntity.getLocation().add( velocity );
+			if ( boostedEntity instanceof GlowEntity )
+			{
+				( ( GlowEntity ) boostedEntity ).setRawLocation( location, false );
+			}
+			else
+			{
+				boostedEntity.teleport( location );
+			}
+		}
+
+		setRawLocation( this.location.add( velocity ), false );
+	}
 }

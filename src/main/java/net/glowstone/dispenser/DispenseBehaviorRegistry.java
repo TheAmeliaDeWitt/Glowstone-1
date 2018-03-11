@@ -1,37 +1,44 @@
 package net.glowstone.dispenser;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Material;
 
-public class DispenseBehaviorRegistry {
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-    private final Map<Material, DispenseBehavior> dispenseBehaviorMap = new ConcurrentHashMap<>();
+public class DispenseBehaviorRegistry
+{
+	private final Map<Material, DispenseBehavior> dispenseBehaviorMap = new ConcurrentHashMap<>();
 
-    public void putBehavior(Material material, DispenseBehavior behavior) {
-        dispenseBehaviorMap.put(material, behavior);
-    }
+	/**
+	 * Returns the dispense behavior for the given item type.
+	 *
+	 * @param material the item type to look up
+	 *
+	 * @return the dispense behavior
+	 */
+	public DispenseBehavior getBehavior( Material material )
+	{
+		if ( material == null )
+		{
+			return DefaultDispenseBehavior.INSTANCE;
+		}
 
-    public void resetBehavior(Material material) {
-        dispenseBehaviorMap.remove(material);
-    }
+		DispenseBehavior behavior = dispenseBehaviorMap.get( material );
+		if ( behavior == null )
+		{
+			return DefaultDispenseBehavior.INSTANCE;
+		}
 
-    /**
-     * Returns the dispense behavior for the given item type.
-     *
-     * @param material the item type to look up
-     * @return the dispense behavior
-     */
-    public DispenseBehavior getBehavior(Material material) {
-        if (material == null) {
-            return DefaultDispenseBehavior.INSTANCE;
-        }
+		return behavior;
+	}
 
-        DispenseBehavior behavior = dispenseBehaviorMap.get(material);
-        if (behavior == null) {
-            return DefaultDispenseBehavior.INSTANCE;
-        }
+	public void putBehavior( Material material, DispenseBehavior behavior )
+	{
+		dispenseBehaviorMap.put( material, behavior );
+	}
 
-        return behavior;
-    }
+	public void resetBehavior( Material material )
+	{
+		dispenseBehaviorMap.remove( material );
+	}
 }

@@ -1,12 +1,25 @@
 package net.glowstone.net.message.play.game;
 
 import com.flowpowered.network.Message;
-import lombok.Data;
 
-@Data
-public final class CraftRecipeResponseMessage implements Message {
+public final class CraftRecipeResponseMessage implements Message
+{
+	private final int recipeId;
+	private final int windowId;
 
-    private final int windowId;
-    private final int recipeId;
+	public CraftRecipeResponseMessage( int windowsId, int recipeId )
+	{
+		this.windowId = windowsId;
+		this.recipeId = recipeId;
+	}
 
+	public int getRecipeId()
+	{
+		return recipeId;
+	}
+
+	public int getWindowId()
+	{
+		return windowId;
+	}
 }

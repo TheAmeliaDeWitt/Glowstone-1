@@ -1,7 +1,6 @@
 package net.glowstone.io.anvil;
 
-import java.io.File;
-import lombok.Getter;
+import net.glowstone.GlowServer;
 import net.glowstone.GlowWorld;
 import net.glowstone.io.FunctionIoService;
 import net.glowstone.io.PlayerDataService;
@@ -15,52 +14,102 @@ import net.glowstone.io.nbt.NbtScoreboardIoService;
 import net.glowstone.io.nbt.NbtStructureDataService;
 import net.glowstone.io.nbt.NbtWorldMetadataService;
 
+import java.io.File;
+
 /**
  * A {@link WorldStorageProvider} for the Anvil map format.
  */
-public class AnvilWorldStorageProvider implements WorldStorageProvider {
+public class AnvilWorldStorageProvider implements WorldStorageProvider
+{
+	private final File dataDir;
+	private final File folder;
+	private final PlayerDataService playerDataService;
+	private final JsonPlayerStatisticIoService playerStatisticIoService;
+	private final ScoreboardIoService scoreboardIoService;
+	private AnvilChunkIoService chunkIoService;
+	private FunctionIoService functionIoService;
+	private NbtWorldMetadataService metadataService;
+	private StructureDataService structureDataService;
+	private GlowWorld world;
 
-    @Getter
-    private final File folder;
-    private final File dataDir;
-    private GlowWorld world;
-    @Getter
-    private AnvilChunkIoService chunkIoService;
-    @Getter
-    private NbtWorldMetadataService metadataService;
-    @Getter
-    private StructureDataService structureDataService;
-    @Getter(lazy = true)
-    private final PlayerDataService playerDataService
-            = new NbtPlayerDataService(world.getServer(), new File(folder, "playerdata"));
-    @Getter(lazy = true)
-    private final ScoreboardIoService scoreboardIoService
-            = new NbtScoreboardIoService(world.getServer(), new File(folder, "data"));
-    @Getter(lazy = true)
-    private final JsonPlayerStatisticIoService playerStatisticIoService
-            = new JsonPlayerStatisticIoService(world.getServer(), new File(folder, "stats"));
-    @Getter(lazy = true)
-    private final FunctionIoService functionIoService = new WorldFunctionIoService(world, dataDir);
+	/**
+	 * Create an instance for the given root folder.
+	 *
+	 * @param glowServer
+	 * @param folder     the root folder
+	 */
+	public AnvilWorldStorageProvider( GlowServer glowServer, File folder )
+	{
+		this.folder = folder;
+		this.dataDir = new File( folder, "data" );
+		this.dataDir.mkdirs();
 
-    /**
-     * Create an instance for the given root folder.
-     * @param folder the root folder
-     */
-    public AnvilWorldStorageProvider(File folder) {
-        this.folder = folder;
-        this.dataDir = new File(folder, "data");
-        this.dataDir.mkdirs();
-    }
+		playerDataService = new NbtPlayerDataService( glowServer, new File( folder, "playerdata" ) );
+		scoreboardIoService = new NbtScoreboardIoService( glowServer, new File( folder, "data" ) );
+		playerStatisticIoService = new JsonPlayerStatisticIoService( glowServer, new File( folder, "stats" ) );
+	}
 
-    @Override
-    public void setWorld(GlowWorld world) {
-        if (this.world != null) {
-            throw new IllegalArgumentException("World is already set");
-        }
-        this.world = world;
-        chunkIoService = new AnvilChunkIoService(folder);
-        metadataService = new NbtWorldMetadataService(world, folder);
-        dataDir.mkdirs();
-        structureDataService = new NbtStructureDataService(world, dataDir);
-    }
+	@Override
+	public AnvilChunkIoService getChunkIoService()
+	{
+		return chunkIoService;
+	}
+
+	@Override
+	public File getFolder()
+	{
+		return folder;
+	}
+
+	@Override
+	public FunctionIoService getFunctionIoService()
+	{
+		return functionIoService;
+	}
+
+	@Override
+	public NbtWorldMetadataService getMetadataService()
+	{
+		return metadataService;
+	}
+
+	@Override
+	public PlayerDataService getPlayerDataService()
+	{
+		return playerDataService;
+	}
+
+	@Override
+	public JsonPlayerStatisticIoService getPlayerStatisticIoService()
+	{
+		return playerStatisticIoService;
+	}
+
+	@Override
+	public ScoreboardIoService getScoreboardIoService()
+	{
+		return scoreboardIoService;
+	}
+
+	@Override
+	public StructureDataService getStructureDataService()
+	{
+		return structureDataService;
+	}
+
+	@Override
+	public void setWorld( GlowWorld world )
+	{
+		if ( this.world != null )
+			throw new IllegalArgumentException( "World is already set" );
+
+		this.world = world;
+
+		functionIoService = new WorldFunctionIoService( world, dataDir );
+
+		chunkIoService = new AnvilChunkIoService( folder );
+		metadataService = new NbtWorldMetadataService( world, folder );
+		dataDir.mkdirs();
+		structureDataService = new NbtStructureDataService( world, dataDir );
+	}
 }

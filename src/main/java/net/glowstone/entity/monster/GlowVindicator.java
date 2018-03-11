@@ -5,35 +5,41 @@ import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Vindicator;
 
-public class GlowVindicator extends GlowMonster implements Vindicator {
+public class GlowVindicator extends GlowMonster implements Vindicator
+{
+	private boolean johnny;
 
-    private boolean johnny;
+	public GlowVindicator( Location loc )
+	{
+		super( loc, EntityType.VINDICATOR, 24 );
+		setBoundingBox( 0.5, 0.8 );
+	}
 
-    public GlowVindicator(Location loc) {
-        super(loc, EntityType.VINDICATOR, 24);
-        setBoundingBox(0.5, 0.8);
-    }
+	@Override
+	protected Sound getAmbientSound()
+	{
+		return Sound.ENTITY_VINDICATION_ILLAGER_AMBIENT;
+	}
 
-    public boolean isJohnny() {
-        return johnny;
-    }
+	@Override
+	protected Sound getDeathSound()
+	{
+		return Sound.ENTITY_VINDICATION_ILLAGER_DEATH;
+	}
 
-    public void setJohnny(boolean johnny) {
-        this.johnny = johnny;
-    }
+	@Override
+	protected Sound getHurtSound()
+	{
+		return Sound.ENTITY_VINDICATION_ILLAGER_HURT;
+	}
 
-    @Override
-    protected Sound getHurtSound() {
-        return Sound.ENTITY_VINDICATION_ILLAGER_HURT;
-    }
+	public boolean isJohnny()
+	{
+		return johnny;
+	}
 
-    @Override
-    protected Sound getDeathSound() {
-        return Sound.ENTITY_VINDICATION_ILLAGER_DEATH;
-    }
-
-    @Override
-    protected Sound getAmbientSound() {
-        return Sound.ENTITY_VINDICATION_ILLAGER_AMBIENT;
-    }
+	public void setJohnny( boolean johnny )
+	{
+		this.johnny = johnny;
+	}
 }
