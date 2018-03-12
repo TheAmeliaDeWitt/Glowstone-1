@@ -32,6 +32,7 @@ import net.glowstone.entity.meta.MetadataMap;
 import net.glowstone.entity.meta.profile.GlowPlayerProfile;
 import net.glowstone.entity.monster.GlowBoss;
 import net.glowstone.entity.objects.GlowItem;
+import net.glowstone.entity.passive.GlowFishingHook;
 import net.glowstone.inventory.GlowInventory;
 import net.glowstone.inventory.GlowInventoryView;
 import net.glowstone.inventory.InventoryMonitor;
@@ -181,6 +182,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -204,6 +206,7 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 	 * A static entity id to use when telling the client about itself.
 	 */
 	public static final int SELF_ID = 0;
+	public static final int HOOK_MAX_DISTANCE = 32;
 
 	/**
 	 * Find a a Location obove or below the specified Location, which is on ground.
@@ -275,6 +278,10 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 	 * A queue of BlockChangeMessages to be sent.
 	 */
 	private final Queue<BlockChangeMessage> blockChanges = new ConcurrentLinkedDeque<>();
+	/**
+	 * Current casted fishing hook.
+	 */
+	private final AtomicReference<GlowFishingHook> currentFishingHook = new AtomicReference<>( null );
 	/**
 	 * The time the player first played, or 0 if unknown.
 	 */
@@ -973,14 +980,14 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		stats.add( statistic, -amount );
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Internals
-
 	@Override
 	public void decrementStatistic( Statistic statistic, Material material ) throws IllegalArgumentException
 	{
 		stats.add( statistic, material, -1 );
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Internals
 
 	@Override
 	public void decrementStatistic( Statistic statistic, Material material, int amount ) throws IllegalArgumentException
@@ -1187,6 +1194,30 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		return 0;
 	}
 
+	/**
+	 * Returns the current fishing hook.
+	 *
+	 * @return the current fishing hook, or null if not fishing
+	 */
+	public GlowFishingHook getCurrentFishingHook()
+	{
+		return currentFishingHook.get();
+	}
+
+	/**
+	 * Removes the current fishing hook, if any, and sets a new one.
+	 *
+	 * @param fishingHook the new fishing hook, or null to stop fishing
+	 */
+	public void setCurrentFishingHook( GlowFishingHook fishingHook )
+	{
+		GlowFishingHook oldHook = currentFishingHook.getAndSet( fishingHook );
+		if ( oldHook != null && !( oldHook.equals( fishingHook ) ) && !oldHook.isDead() )
+		{
+			oldHook.remove();
+		}
+	}
+
 	public GlowBlock getDigging()
 	{
 		return digging;
@@ -1235,14 +1266,14 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		return getName();
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Basic stuff
+
 	@Override
 	public void setDisplayName( String name )
 	{
 		displayName = name;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Basic stuff
 
 	public int getEnderPearlCooldown()
 	{
@@ -1327,14 +1358,14 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		return firstPlayed;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// HumanEntity overrides
+
 	@Override
 	public float getFlySpeed()
 	{
 		return flySpeed;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// HumanEntity overrides
 
 	@Override
 	public void setFlySpeed( float value ) throws IllegalArgumentException
@@ -1349,15 +1380,15 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		return foodLevel;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Editable properties
+
 	@Override
 	public void setFoodLevel( int food )
 	{
 		this.foodLevel = Math.min( food, 20 );
 		sendHealth();
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Editable properties
 
 	@Override
 	public double getHealthScale()
@@ -1414,6 +1445,9 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		return metadata.getByte( MetadataIndex.PLAYER_MAIN_HAND ) == 0 ? MainHand.LEFT : MainHand.RIGHT;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Entity status
+
 	/**
 	 * Gets the currently open window ID.
 	 *
@@ -1427,9 +1461,6 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		}
 		return invMonitor.getId();
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Entity status
 
 	@Override
 	public Player getPlayer()
@@ -1479,14 +1510,14 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		return timeOffset;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Player capabilities
+
 	@Override
 	public WeatherType getPlayerWeather()
 	{
 		return playerWeather;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Player capabilities
 
 	@Override
 	public void setPlayerWeather( WeatherType type )
@@ -1536,14 +1567,14 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		sendHealth();
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Experience and levelling
+
 	@Override
 	public Scoreboard getScoreboard()
 	{
 		return scoreboard;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Experience and levelling
 
 	@Override
 	public void setScoreboard( Scoreboard scoreboard ) throws IllegalArgumentException, IllegalStateException
@@ -1644,13 +1675,13 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		return usageItem;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Health and food handling
+
 	public void setUsageItem( ItemStack usageItem )
 	{
 		this.usageItem = usageItem;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Health and food handling
 
 	public long getUsageTime()
 	{
@@ -1753,14 +1784,14 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		return false;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Actions
+
 	@Override
 	public boolean hasPlayedBefore()
 	{
 		return hasPlayedBefore;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Actions
 
 	@Override
 	public boolean hasResourcePack()
@@ -2571,6 +2602,22 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 			session.send( new SetPassengerMessage( SELF_ID, getPassengers().stream().mapToInt( Entity::getEntityId ).toArray() ) );
 		}
 		getAttributeManager().sendMessages( session );
+
+		GlowFishingHook hook = currentFishingHook.get();
+		if ( hook != null )
+		{
+			// The line will disappear if the player wanders more than 32 blocks away from the
+			// bobber, or if the player stops holding a fishing rod.
+			if ( getInventory().getItemInMainHand().getType() != Material.FISHING_ROD && getInventory().getItemInOffHand().getType() != Material.FISHING_ROD )
+			{
+				setCurrentFishingHook( null );
+			}
+
+			if ( hook.location.distanceSquared( location ) > HOOK_MAX_DISTANCE * HOOK_MAX_DISTANCE )
+			{
+				setCurrentFishingHook( null );
+			}
+		}
 	}
 
 	private void pulseDigging()
@@ -3541,6 +3588,8 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 		if ( distance <= 1024.0D || isLongDistance && distance <= 262144.0D )
 		{
 			getSession().send( new PlayParticleMessage( particleId, isLongDistance, ( float ) location.getX(), ( float ) location.getY(), ( float ) location.getZ(), ( float ) offsetX, ( float ) offsetY, ( float ) offsetZ, ( float ) extra, count, particleData ) );
+
+			getSession().send( new PlayParticleMessage( particleId, isLongDistance, ( float ) location.getX(), ( float ) location.getY(), ( float ) location.getZ(), ( float ) offsetX, ( float ) offsetY, ( float ) offsetZ, ( float ) extra, count, particleData ) );
 		}
 	}
 
@@ -4008,4 +4057,5 @@ public class GlowPlayer extends GlowHumanEntity implements Player
 	{
 		server.getRawOnlinePlayers().stream().filter( player -> player.canSee( this ) ).forEach( player -> player.getSession().send( updateMessage ) );
 	}
+
 }

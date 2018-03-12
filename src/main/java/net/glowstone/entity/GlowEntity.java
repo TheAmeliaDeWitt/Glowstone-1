@@ -84,6 +84,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class GlowEntity implements Entity
 {
 	/**
+	 * An ID to use in network messages when the protocol calls for a 32-bit entity ID, but the
+	 * relevant Object doesn't exist, isn't an Entity, or is in a different World (and thus a
+	 * different space for 32-bit entity IDs).
+	 */
+	public static final int ENTITY_ID_NOBODY = -1;
+	/**
 	 * The metadata store for entities.
 	 */
 	private static final MetadataStore<Entity> bukkitMetadata = new EntityMetadataStore();
@@ -245,7 +251,6 @@ public abstract class GlowEntity implements Entity
 	 * This entity's unique id.
 	 */
 	private UUID uuid;
-
 	/**
 	 * Creates an entity and adds it to the specified world.
 	 *
@@ -641,6 +646,9 @@ public abstract class GlowEntity implements Entity
 		}
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Command sender
+
 	@Override
 	public String getCustomName()
 	{
@@ -672,9 +680,6 @@ public abstract class GlowEntity implements Entity
 	{
 		return customTags;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Command sender
 
 	public Location getDismountLocation()
 	{
@@ -710,14 +715,14 @@ public abstract class GlowEntity implements Entity
 		return fallDistance;
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Core properties
-
 	@Override
 	public void setFallDistance( float distance )
 	{
 		fallDistance = Math.max( distance, 0 );
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Core properties
 
 	@Override
 	public int getFireTicks()
@@ -748,13 +753,13 @@ public abstract class GlowEntity implements Entity
 		}
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Location stuff
-
 	public void setGravityAccel( Vector gravityAccel )
 	{
 		this.gravityAccel = gravityAccel;
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Location stuff
 
 	@Override
 	public double getHeight()
@@ -825,14 +830,14 @@ public abstract class GlowEntity implements Entity
 		return 160;  // this appears to be Minecraft's default value
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Internals
-
 	@Override
 	public List<MetadataValue> getMetadata( String metadataKey )
 	{
 		return bukkitMetadata.getMetadata( this, metadataKey );
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Internals
 
 	public Location getMountLocation()
 	{
@@ -985,15 +990,15 @@ public abstract class GlowEntity implements Entity
 		return velocity.clone();
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Physics stuff
-
 	@Override
 	public void setVelocity( Vector velocity )
 	{
 		this.velocity.copy( velocity );
 		velocityChanged = true;
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Physics stuff
 
 	@Override
 	public double getWidth()
@@ -1056,9 +1061,6 @@ public abstract class GlowEntity implements Entity
 		return Position.hasRotated( location, previousLocation );
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Various properties
-
 	@Override
 	public int hashCode()
 	{
@@ -1067,6 +1069,9 @@ public abstract class GlowEntity implements Entity
 		result = prime * result + entityId;
 		return result;
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Various properties
 
 	public boolean intersects( BoundingBox box )
 	{
@@ -1085,19 +1090,29 @@ public abstract class GlowEntity implements Entity
 		metadata.set( MetadataIndex.SHOW_NAME_TAG, flag );
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Miscellaneous actions
-
 	@Override
 	public boolean isDead()
 	{
 		return !active;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Miscellaneous actions
+
 	@Override
 	public boolean isEmpty()
 	{
 		return getPassengers().isEmpty();
+	}
+
+	public boolean isFriction()
+	{
+		return friction;
+	}
+
+	public void setFriction( boolean friction )
+	{
+		this.friction = friction;
 	}
 
 	@Override
@@ -1106,14 +1121,14 @@ public abstract class GlowEntity implements Entity
 		return metadata.getBit( MetadataIndex.STATUS, StatusFlags.GLOWING );
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Entity stacking
+
 	@Override
 	public void setGlowing( boolean glowing )
 	{
 		metadata.setBit( MetadataIndex.STATUS, StatusFlags.GLOWING, glowing );
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Entity stacking
 
 	@Override
 	public boolean isInsideVehicle()
@@ -1121,14 +1136,14 @@ public abstract class GlowEntity implements Entity
 		return getVehicle() != null;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Custom name
+
 	@Override
 	public boolean isInvulnerable()
 	{
 		return invulnerable;
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Custom name
 
 	@Override
 	public void setInvulnerable( boolean invulnerable )
@@ -1542,14 +1557,14 @@ public abstract class GlowEntity implements Entity
 		leashHolderChanged = false;
 	}
 
+	////////////////////////////////////////////////////////////////////////////
+	// Metadata
+
 	@Override
 	public void sendMessage( String s )
 	{
 		throw new UnsupportedOperationException( "Not implemented yet." );
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Metadata
 
 	@Override
 	public void sendMessage( String[] strings )
@@ -1580,11 +1595,6 @@ public abstract class GlowEntity implements Entity
 		{
 			airDrag = drag;
 		}
-	}
-
-	public void setFriction( boolean friction )
-	{
-		this.friction = friction;
 	}
 
 	////////////////////////////////////////////////////////////////////////////

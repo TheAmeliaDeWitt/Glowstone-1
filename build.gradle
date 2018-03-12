@@ -2,14 +2,6 @@ buildscript {
 	repositories {
 		jcenter()
 		mavenCentral()
-		maven {
-			name = "sonatype"
-			url = "https://oss.sonatype.org/content/repositories/snapshots/"
-		}
-		maven {url 'https://repo.glowstone.net/repository/internal/'}
-		maven {url 'https://repo.glowstone.net/repository/snapshots/'}
-		maven {url 'http://repo.md-5.net/content/repositories/releases/'}
-		maven {url 'http://ci.emc.gs/nexus/content/groups/aikar/'}
 	}
 
 	dependencies {
@@ -22,6 +14,29 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'license'
 apply plugin: 'checkstyle'
+
+repositories {
+	jcenter()
+	mavenCentral()
+	maven {
+		name "sonatype"
+		url "https://oss.sonatype.org/content/repositories/snapshots/"
+	}
+	maven {
+		name 'glowstone-internal'
+		url 'https://repo.glowstone.net/repository/internal/'
+	}
+	maven {
+		name 'glowstone-snapshots'
+		url 'https://repo.glowstone.net/repository/snapshots/'
+	}
+	maven {
+		url 'http://repo.md-5.net/content/repositories/releases/'
+	}
+	maven {
+		url 'http://ci.emc.gs/nexus/content/groups/aikar/'
+	}
+}
 
 defaultTasks 'clean', 'build'
 

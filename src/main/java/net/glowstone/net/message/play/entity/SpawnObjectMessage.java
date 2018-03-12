@@ -5,6 +5,7 @@ import com.flowpowered.network.Message;
 import net.glowstone.util.Position;
 
 import org.bukkit.Location;
+import org.bukkit.util.Vector;
 
 import java.util.UUID;
 
@@ -30,7 +31,12 @@ public final class SpawnObjectMessage implements Message
 	public static final int SPLASH_POTION = 73;
 	public static final int EXPERIENCE_BOTTLE = 75;
 	public static final int WITHER_SKULL = 66;
+	public static final int FISHING_HOOK = 90;
 
+	private static int convert( double val )
+	{
+		return ( int ) ( val * 8000 );
+	}
 	private final int data;
 	private final int id;
 	private final int pitch;
@@ -43,6 +49,22 @@ public final class SpawnObjectMessage implements Message
 	private final double y;
 	private final int yaw;
 	private final double z;
+
+	public SpawnObjectMessage( int id, UUID uuid, int type, double x, double y, double z, int pitch, int yaw, int data, int velX, int velY, int velZ )
+	{
+		this.id = id;
+		this.uuid = uuid;
+		this.type = type;
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.pitch = pitch;
+		this.yaw = yaw;
+		this.data = data;
+		this.velX = velX;
+		this.velY = velY;
+		this.velZ = velZ;
+	}
 
 	public SpawnObjectMessage( int id, UUID uuid, int type, double x, double y, double z, int pitch, int yaw )
 	{
@@ -81,20 +103,9 @@ public final class SpawnObjectMessage implements Message
 		this( id, uuid, type, location.getX(), location.getY(), location.getZ(), Position.getIntPitch( location ), Position.getIntYaw( location ), data );
 	}
 
-	public SpawnObjectMessage( int id, UUID uuid, int type, double x, double y, double z, int pitch, int yaw, int data, int velX, int velY, int velZ )
+	public SpawnObjectMessage( int id, UUID uuid, int type, double x, double y, double z, int pitch, int yaw, int data, Vector vector )
 	{
-		this.id = id;
-		this.uuid = uuid;
-		this.type = type;
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.pitch = pitch;
-		this.yaw = yaw;
-		this.data = data;
-		this.velX = velX;
-		this.velY = velY;
-		this.velZ = velZ;
+		this( id, uuid, type, x, y, z, pitch, yaw, data, convert( vector.getX() ), convert( vector.getY() ), convert( vector.getZ() ) );
 	}
 
 	public int getData()
@@ -157,9 +168,13 @@ public final class SpawnObjectMessage implements Message
 		return z;
 	}
 
-	public boolean hasFireball()
+	public boolean hasData()
 	{
 		return data != 0;
 	}
 
+	public boolean hasFireball()
+	{
+		return data != 0;
+	}
 }

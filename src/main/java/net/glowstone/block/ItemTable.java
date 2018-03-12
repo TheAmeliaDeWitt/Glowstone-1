@@ -113,6 +113,7 @@ import net.glowstone.block.itemtype.ItemFilledBucket;
 import net.glowstone.block.itemtype.ItemFirework;
 import net.glowstone.block.itemtype.ItemFishCooked;
 import net.glowstone.block.itemtype.ItemFishRaw;
+import net.glowstone.block.itemtype.ItemFishingRod;
 import net.glowstone.block.itemtype.ItemFlintAndSteel;
 import net.glowstone.block.itemtype.ItemFood;
 import net.glowstone.block.itemtype.ItemFoodSeeds;
@@ -164,20 +165,15 @@ public final class ItemTable
 	{
 		return INSTANCE;
 	}
+
 	private final Map<NamespacedKey, ItemType> extraTypes = new HashMap<>();
 	private final EnumMap<Material, ItemType> materialToType = new EnumMap<>( Material.class );
 	private int nextBlockId;
-
-	////////////////////////////////////////////////////////////////////////////
-	// Data
 	private int nextItemId;
 
 	private ItemTable()
 	{
 	}
-
-	////////////////////////////////////////////////////////////////////////////
-	// Registration
 
 	private ItemType createDefault( Material material )
 	{
@@ -649,6 +645,7 @@ public final class ItemTable
 		reg( Material.FIREWORK, new ItemFirework() );
 		reg( Material.ENDER_PEARL, new ItemEnderPearl() );
 		reg( Material.KNOWLEDGE_BOOK, new ItemKnowledgeBook() );
+		reg( Material.FISHING_ROD, new ItemFishingRod() );
 	}
 
 }

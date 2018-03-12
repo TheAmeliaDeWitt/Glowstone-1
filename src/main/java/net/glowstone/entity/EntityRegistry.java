@@ -47,6 +47,7 @@ import net.glowstone.entity.passive.GlowChicken;
 import net.glowstone.entity.passive.GlowCow;
 import net.glowstone.entity.passive.GlowDonkey;
 import net.glowstone.entity.passive.GlowFirework;
+import net.glowstone.entity.passive.GlowFishingHook;
 import net.glowstone.entity.passive.GlowHorse;
 import net.glowstone.entity.passive.GlowLlama;
 import net.glowstone.entity.passive.GlowMooshroom;
@@ -102,6 +103,7 @@ import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Firework;
+import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Giant;
 import org.bukkit.entity.Guardian;
@@ -161,7 +163,6 @@ import java.util.Map;
 
 public class EntityRegistry
 {
-
 	private static final Map<String, CustomEntityDescriptor> CUSTOM_ENTITIES = new HashMap<>();
 
 	private static final Map<Class<? extends Entity>, Class<? extends GlowEntity>> ENTITIES;
@@ -169,6 +170,7 @@ public class EntityRegistry
 	static
 	{
 		Map<Class<? extends Entity>, Class<? extends GlowEntity>> entities0 = new HashMap<>();
+
 		entities0.put( AbstractHorse.class, GlowAbstractHorse.class );
 		entities0.put( AreaEffectCloud.class, GlowAreaEffectCloud.class );
 		entities0.put( ArmorStand.class, GlowArmorStand.class );
@@ -196,7 +198,7 @@ public class EntityRegistry
 		entities0.put( FallingBlock.class, GlowFallingBlock.class );
 		entities0.put( Fireball.class, GlowFireball.class );
 		entities0.put( Firework.class, GlowFirework.class );
-		//TODO: Fishing hook
+		entities0.put( FishHook.class, GlowFishingHook.class );
 		entities0.put( Ghast.class, GlowGhast.class );
 		entities0.put( Giant.class, GlowGiant.class );
 		entities0.put( Guardian.class, GlowGuardian.class );

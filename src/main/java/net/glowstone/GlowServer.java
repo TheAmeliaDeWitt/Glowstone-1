@@ -62,6 +62,7 @@ import net.glowstone.command.minecraft.XpCommand;
 import net.glowstone.constants.GlowEnchantment;
 import net.glowstone.constants.GlowPotionEffect;
 import net.glowstone.entity.EntityIdManager;
+import net.glowstone.entity.FishingRewardManager;
 import net.glowstone.entity.GlowPlayer;
 import net.glowstone.entity.meta.profile.GlowPlayerProfile;
 import net.glowstone.entity.meta.profile.ProfileCache;
@@ -456,6 +457,10 @@ public final class GlowServer implements Server
 	 */
 	private final EntityIdManager entityIdManager = new EntityIdManager();
 	/**
+	 * The FishingRewards of this server.
+	 */
+	private final FishingRewardManager fishingRewardManager;
+	/**
 	 * The help map for the server.
 	 */
 	private final GlowHelpMap helpMap = new GlowHelpMap( this );
@@ -609,7 +614,10 @@ public final class GlowServer implements Server
 	 */
 	public GlowServer( ServerConfig config )
 	{
+		Bukkit.setServer( this );
+
 		materialValueManager = new BuiltinMaterialValueManager();
+		fishingRewardManager = new FishingRewardManager();
 		advancements = new HashMap<>();
 		// test advancement
 		GlowAdvancement advancement = new GlowAdvancement( NamespacedKey.minecraft( "test" ), null );
@@ -624,7 +632,6 @@ public final class GlowServer implements Server
 		nameBans = new GlowBanList( this, Type.NAME );
 		ipBans = new GlowBanList( this, Type.IP );
 
-		Bukkit.setServer( this );
 		loadConfig();
 	}
 
@@ -825,9 +832,6 @@ public final class GlowServer implements Server
 		craftingManager.clearRecipes();
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Access to internals
-
 	/**
 	 * Creates an {@link AdvancementsMessage} containing a list of advancements the server has,
 	 * along with some extra actions.
@@ -844,6 +848,9 @@ public final class GlowServer implements Server
 	{
 		return createAdvancementsMessage( advancements, clear, remove, player );
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Access to internals
 
 	/**
 	 * Creates an {@link AdvancementsMessage} containing a given list of advancements, along with
@@ -1167,14 +1174,14 @@ public final class GlowServer implements Server
 		}
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Static server properties
-
 	@Override
 	public String getBukkitVersion()
 	{
 		return GlowServer.class.getPackage().getSpecificationVersion();
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Static server properties
 
 	/**
 	 * Whether the server uses the classic water flowing algorithm.
@@ -1223,9 +1230,6 @@ public final class GlowServer implements Server
 		return config.getInt( Key.COMPRESSION_THRESHOLD );
 	}
 
-	////////////////////////////////////////////////////////////////////////////
-	// Access to Bukkit API
-
 	/**
 	 * Gets the server configuration.
 	 *
@@ -1235,6 +1239,9 @@ public final class GlowServer implements Server
 	{
 		return config;
 	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// Access to Bukkit API
 
 	/**
 	 * Returns the folder where configuration files are stored.
@@ -1353,6 +1360,11 @@ public final class GlowServer implements Server
 	public EntityIdManager getEntityIdManager()
 	{
 		return entityIdManager;
+	}
+
+	public FishingRewardManager getFishingRewardManager()
+	{
+		return fishingRewardManager;
 	}
 
 	@Override
@@ -2843,8 +2855,9 @@ public final class GlowServer implements Server
 		}
 
 		if ( storageProviderFactory == null )
+		{
 			storageProviderFactory = ( worldName ) -> new AnvilWorldStorageProvider( this, new File( getWorldContainer(), worldName ) );
-
+		}
 		String name = config.getString( Key.LEVEL_NAME );
 		boolean structs = getGenerateStructures();
 		createWorld( WorldCreator.name( name ).environment( Environment.NORMAL ).seed( seed ).type( type ).generateStructures( structs ) );

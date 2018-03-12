@@ -13,7 +13,6 @@ import org.bukkit.entity.LivingEntity;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 public class GlowEvokerFangs extends GlowEntity implements EvokerFangs
 {
@@ -34,7 +33,7 @@ public class GlowEvokerFangs extends GlowEntity implements EvokerFangs
 		double z = location.getZ();
 		int yaw = Position.getIntYaw( location );
 		int pitch = Position.getIntPitch( location );
-		result.add( new SpawnObjectMessage( entityId, UUID.randomUUID(), 79, x, y, z, pitch, yaw, 0, 0, 0, 0 ) );
+		result.add( new SpawnObjectMessage( entityId, this.getUniqueId(), 79, x, y, z, pitch, yaw, 0, 0, 0, 0 ) );
 		return result;
 	}
 

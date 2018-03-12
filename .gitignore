@@ -14,7 +14,6 @@ target
 !.gitmodules
 !.mailmap
 !.gitattributes
-dependency-reduced-pom.xml
 .classpath
 .project
 .settings

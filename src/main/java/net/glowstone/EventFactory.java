@@ -88,7 +88,7 @@ public final class EventFactory
 
 	/**
 	 * Runs an EntityDamageEvent and updates {@link org.bukkit.entity.Entity#setLastDamageCause} and
-	 * {@link org.bukkit.entity.Entity#setLastDamage}.
+	 * (for a {@link LivingEntity} only) {@link LivingEntity#setLastDamage(double)}.
 	 *
 	 * @param event the event to run
 	 * @param <T>   the event's type
@@ -197,7 +197,7 @@ public final class EventFactory
 	 */
 	public static PlayerLoginEvent onPlayerLogin( GlowPlayer player, String hostname )
 	{
-		GlowServer server = player.getServer();
+		Server server = player.getServer();
 		InetAddress address = player.getAddress().getAddress();
 		String addressString = address.getHostAddress();
 		PlayerLoginEvent event = new PlayerLoginEvent( player, hostname, address );
